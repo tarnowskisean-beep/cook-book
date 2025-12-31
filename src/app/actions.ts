@@ -36,7 +36,7 @@ export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VI
                 ${visualStyle}
                 
                 Task:
-                1. Write a **Visual Prompt** for an AI Image Generator (Flux Realism). It must be detailed, photorealistic, and highly descriptive.
+                1. Write a **Visual Prompt** for an AI Image Generator (Krea / FLUX.1). It must be detailed, artsy, and highly descriptive.
                 2. Write a **Caption** for social media (${platforms.join(', ')}).
 
                 Output JSON format:

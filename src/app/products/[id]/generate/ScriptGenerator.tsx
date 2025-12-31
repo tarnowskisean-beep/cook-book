@@ -65,7 +65,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
         setGeneratedUrl("");
 
         if (mediaType === 'IMAGE') {
-            setStatusMessage("Generating Image with Flux Realism...");
+            setStatusMessage("Generating Image with Krea AI...");
             try {
                 const result = await generateImageAction(visualPrompt);
                 if (result.success && result.url) {
@@ -260,7 +260,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
 
                     <div>
                         <label style={{ display: "block", marginBottom: "var(--space-2)" }}>
-                            AI Visual Prompt ({mediaType === 'VIDEO' ? 'Kling Video' : 'Flux Image'})
+                            AI Visual Prompt ({mediaType === 'VIDEO' ? 'Kling Video' : 'Krea Image'})
                         </label>
                         <textarea
                             value={visualPrompt}
