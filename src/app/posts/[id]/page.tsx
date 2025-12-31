@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { EditScriptForm, CancelButton } from './ClientComponents';
+import { EditScriptForm, CancelButton, MediaManager } from './ClientComponents';
 
 interface Props {
     params: Promise<{ id: string }>
@@ -60,6 +60,13 @@ export default async function PostDetailPage({ params }: Props) {
                         </div>
                     </div>
                 </div>
+
+                <MediaManager
+                    postId={post.id}
+                    contentId={post.content.id}
+                    url={post.content.url}
+                    type={post.content.type}
+                />
 
                 <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "var(--space-2)" }}>Caption / Script</h3>
                 <EditScriptForm postId={post.id} contentId={post.content.id} initialScript={script} />

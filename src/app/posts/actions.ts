@@ -63,3 +63,23 @@ export async function updatePostScript(formData: FormData) {
     revalidatePath('/calendar');
     return { success: true };
 }
+// Update media URL
+export async function updatePostMedia(formData: FormData) {
+    const postId = formData.get('postId') as string;
+    const contentId = formData.get('contentId') as string;
+    const newUrl = formData.get('url') as string;
+
+    try {
+        await prisma.generatedContent.update({
+            where: { id: contentId },
+            data: { url: newUrl }
+        });
+    } catch (error) {
+        console.error("Failed to update media:", error);
+        return { success: false, error: "Failed to update media" };
+    }
+
+    revalidatePath(`/posts/${postId}`);
+    revalidatePath('/calendar');
+    return { success: true };
+}
