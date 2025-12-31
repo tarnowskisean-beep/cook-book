@@ -105,7 +105,12 @@ export async function checkVideoStatus(requestId: string, isImageToVideo: boolea
 
                     // Robust check for different response formats
                     // Krea often uses 'file' or 'url' at top level, Kling uses 'video.url'
-                    const videoUrl = result.video?.url || result.file?.url || result.url;
+                    // Also checking nested 'data' prop which is common in some Fal endpoints
+                    const videoUrl =
+                        result.video?.url ||
+                        result.file?.url ||
+                        result.url ||
+                        (result.data && (result.data.video?.url || result.data.file?.url || result.data.url));
 
                     if (videoUrl) {
                         return { success: true, status: "COMPLETED", url: videoUrl };
