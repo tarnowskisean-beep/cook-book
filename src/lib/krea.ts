@@ -1,4 +1,4 @@
-import * as fal from "@fal-ai/serverless-client";
+import { fal } from "@fal-ai/client";
 
 // Configure Fal with API Key (server-side only)
 fal.config({
