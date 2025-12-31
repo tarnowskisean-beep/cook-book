@@ -37,21 +37,21 @@ export async function generateImage(prompt: string, aspectRatio: "16:9" | "9:16"
 }
 
 /**
- * Generate a video using Krea's model (Wan-14b via Fal).
- * This supports Text-to-Video.
- */
-/**
  * Submit a video generation job (Async).
+ * Uses Kling Video (via Fal) as the high-quality Krea alternative.
  * Returns requestId to check status later.
  */
 export async function submitVideo(prompt: string, imageUrl?: string) {
     try {
-        const endpoint = imageUrl ? "fal-ai/krea-wan-14b/image-to-video" : "fal-ai/krea-wan-14b/text-to-video";
+        // Kling Standard Endpoints
+        const endpoint = imageUrl
+            ? "fal-ai/kling-video/v1/standard/image-to-video"
+            : "fal-ai/kling-video/v1/standard/text-to-video";
 
         const input: any = {
             prompt,
-            width: 720,
-            height: 1280
+            aspect_ratio: "9:16", // vertical video for social
+            duration: "5s"
         };
 
         if (imageUrl) {
@@ -70,22 +70,36 @@ export async function submitVideo(prompt: string, imageUrl?: string) {
  * Check the status of a video generation job.
  */
 export async function checkVideoStatus(requestId: string, isImageToVideo: boolean = false) {
-    const endpoint = isImageToVideo ? "fal-ai/krea-wan-14b/image-to-video" : "fal-ai/krea-wan-14b/text-to-video";
-    try {
-        const status = await fal.queue.status(endpoint, {
-            requestId,
-            logs: true
-        });
+    // We check both queues to cover cases where we don't know the type,
+    // prioritizing the most likely based on context if simpler, but here we just iterate.
+    const endpoints = [
+        "fal-ai/kling-video/v1/standard/text-to-video",
+        "fal-ai/kling-video/v1/standard/image-to-video"
+    ];
 
-        if (status.status === "COMPLETED") {
-            const result: any = await fal.queue.result(endpoint, { requestId });
-            if (result.video && result.video.url) {
-                return { success: true, status: "COMPLETED", url: result.video.url };
+    for (const endpoint of endpoints) {
+        try {
+            const status = await fal.queue.status(endpoint, {
+                requestId,
+                logs: true
+            });
+
+            if (status) {
+                if (status.status === "COMPLETED") {
+                    const result: any = await fal.queue.result(endpoint, { requestId });
+                    if (result.video && result.video.url) {
+                        return { success: true, status: "COMPLETED", url: result.video.url };
+                    }
+                }
+                // If found and not completed, return status
+                return { success: true, status: status.status };
             }
+        } catch (e) {
+            // endpoint mismatch likely throws error, continue to next
+            continue;
         }
-        return { success: true, status: status.status };
-    } catch (error: any) {
-        console.error("Fal Status error:", error);
-        return { success: false, error: error.message };
     }
+
+    // If not found in either
+    return { success: false, error: "Job not found in queues" };
 }
