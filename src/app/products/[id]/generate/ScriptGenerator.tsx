@@ -221,6 +221,33 @@ export default function ScriptGenerator({ productId, productName }: Props) {
                     </div>
 
                     <div>
+                        <label style={{ display: "block", marginBottom: "var(--space-2)" }}>Visual Style (The Vibe)</label>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-3)", marginBottom: "var(--space-6)" }}>
+                            {['Cinematic', 'Viral / High Energy', 'Lifestyle / Cozy', 'Professional Studio', 'Dark & Moody'].map(s => {
+                                const isSelected = style === s;
+                                return (
+                                    <button
+                                        key={s}
+                                        onClick={() => setStyle(s)}
+                                        style={{
+                                            padding: "var(--space-3)",
+                                            borderRadius: "var(--radius-md)",
+                                            border: isSelected ? "2px solid var(--color-primary)" : "1px solid rgba(255,255,255,0.1)",
+                                            background: isSelected ? "rgba(var(--primary-h), var(--primary-s), var(--primary-l), 0.2)" : "transparent",
+                                            color: "var(--text-main)",
+                                            cursor: "pointer",
+                                            textAlign: "left",
+                                            fontSize: "0.9rem"
+                                        }}
+                                    >
+                                        {isSelected ? "✨ " : ""}{s}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div>
                         <label style={{ display: "block", marginBottom: "var(--space-2)" }}>Target Platforms</label>
                         <div style={{ display: "flex", gap: "var(--space-4)" }}>
                             {['Instagram', 'TikTok', 'Facebook', 'Twitter / X'].map(p => {
