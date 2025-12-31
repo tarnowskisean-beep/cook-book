@@ -3,7 +3,7 @@
 import { useTransition, useState } from "react";
 import { cancelPost, updatePostScript, updatePostMedia } from "../actions";
 
-export function MediaManager({ postId, contentId, url, type }: { postId: string, contentId: string, url: string, type: string }) {
+export function MediaManager({ postId, contentId, url, type }: { postId: string, contentId: string, url: string | null, type: string }) {
     const [isPending, startTransition] = useTransition();
     const [isEditing, setIsEditing] = useState(false);
 
@@ -11,8 +11,10 @@ export function MediaManager({ postId, contentId, url, type }: { postId: string,
         <div style={{ marginBottom: "var(--space-6)" }}>
             <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "var(--space-2)" }}>Media Content</h3>
 
-            <div style={{ position: "relative", marginBottom: "var(--space-4)", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--border-color)", background: "#000" }}>
-                {type === 'VIDEO' ? (
+            <div style={{ position: "relative", marginBottom: "var(--space-4)", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--border-color)", background: "#000", minHeight: "200px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {!url ? (
+                    <div style={{ color: "var(--text-muted)" }}>No media available</div>
+                ) : type === 'VIDEO' ? (
                     <video src={url} controls style={{ width: "100%", maxHeight: "500px", display: "block" }} />
                 ) : (
                     <img src={url} alt="Post Content" style={{ width: "100%", maxHeight: "500px", objectFit: "contain", display: "block" }} />
@@ -21,7 +23,7 @@ export function MediaManager({ postId, contentId, url, type }: { postId: string,
 
             <div style={{ display: "flex", gap: "var(--space-4)", alignItems: "center" }}>
                 <a
-                    href={url}
+                    href={url || "#"}
                     download={`content-${contentId}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -60,7 +62,7 @@ export function MediaManager({ postId, contentId, url, type }: { postId: string,
                                 name="url"
                                 placeholder="https://..."
                                 required
-                                defaultValue={url}
+                                defaultValue={url || ""}
                                 style={{ flex: 1, padding: "var(--space-2)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", background: "var(--bg-paper)", color: "var(--text-main)" }}
                             />
                         </div>
