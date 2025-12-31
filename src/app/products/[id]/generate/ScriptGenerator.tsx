@@ -11,48 +11,13 @@ interface Props {
 
 export default function ScriptGenerator({ productId, productName }: Props) {
     const router = useRouter();
-    const [step, setStep] = useState(1);
-    const [loading, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
+    const [statusMessage, setStatusMessage] = useState<string>("");
 
-    // State
-    const [platforms, setPlatforms] = useState<string[]>(['Instagram']);
-    const [script, setScript] = useState('');
-    const [caption, setCaption] = useState('');
-    const [videoUrl, setVideoUrl] = useState('');
-
-    const togglePlatform = (p: string) => {
-        if (platforms.includes(p)) {
-            if (platforms.length > 1) { // Prevent unselecting last one
-                setPlatforms(platforms.filter(item => item !== p));
-            }
-        } else {
-            setPlatforms([...platforms, p]);
-        }
-    };
-
-    const handleGenerateScript = async () => {
-        setLoading(true);
-        try {
-            const result = await generateScript(productId, platforms);
-
-            if (result.success && result.script) {
-                setScript(result.script);
-                setCaption(`Check out the new ${productName}! 🚀 #innovation #product`);
-                setStep(2);
-            } else {
-                alert("Generation failed: " + (result.error || "Unknown error"));
-            }
-        } catch (e: any) {
-            console.error(e);
-            alert("Error: " + e.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // ... (existing code)
 
     const handleGenerateVideo = async () => {
         setLoading(true);
+        setStatusMessage("Submitting job to Krea/Fal...");
         try {
             // 1. Submit Job
             const submitResult = await submitVideoAction(script);
@@ -63,6 +28,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
             }
 
             const requestId = submitResult.requestId;
+            setStatusMessage("Job submitted. Waiting for processing...");
 
             // 2. Poll for Status
             const pollInterval = setInterval(async () => {
@@ -85,13 +51,14 @@ export default function ScriptGenerator({ productId, productName }: Props) {
                         clearInterval(pollInterval);
                         setLoading(false);
                         alert("Video generation failed.");
+                    } else {
+                        // Else: IN_PROGRESS or QUEUED
+                        setStatusMessage(`Status: ${statusResult.status} (Please wait, video takes ~2 mins)...`);
+                        console.log("Polling video status:", statusResult.status);
                     }
-                    // Else: IN_PROGRESS or QUEUED, continue polling
-                    console.log("Polling video status:", statusResult.status);
 
                 } catch (e) {
                     console.error("Polling error", e);
-                    // Don't stop polling on single transient error, but maybe count retries strictly
                 }
             }, 3000); // Check every 3 seconds
 
@@ -102,54 +69,24 @@ export default function ScriptGenerator({ productId, productName }: Props) {
         }
     };
 
-    const handleSaveAndSchedule = async () => {
-        setSaving(true);
-        try {
-            const result = await saveContent(
-                productId,
-                'VIDEO',
-                videoUrl,
-                platforms,
-                script
-            );
-
-            if (result.success && result.data) {
-                const contentIds = result.data.map((c: any) => c.id);
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-
-                await schedulePost(contentIds, tomorrow.toISOString());
-
-                alert(`Content saved and scheduled for ${platforms.length} platforms!`);
-                router.push(`/products/${productId}`);
-            } else {
-                alert("Failed to save content.");
-            }
-        } catch (e) {
-            console.error(e);
-            alert("An error occurred.");
-        } finally {
-            setSaving(false);
-        }
-    };
+    // ... (existing code)
 
     return (
         <div className="card" style={{ maxWidth: "800px", minHeight: "600px" }}>
-            {/* Progress Stepper */}
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--space-8)", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "var(--space-4)" }}>
-                {['Configuration', 'Script Review', 'Preview & Save'].map((label, i) => (
-                    <div key={label} style={{ color: step > i ? "#4ade80" : step === i + 1 ? "var(--color-primary-light)" : "var(--text-muted)", fontWeight: step === i + 1 ? 600 : 400 }}>
-                        {i + 1}. {label}
-                    </div>
-                ))}
-            </div>
+            {/* ... */}
 
             {loading && (
                 <div style={{ textAlign: "center", padding: "var(--space-12)" }}>
                     <div style={{ fontSize: "2rem", marginBottom: "var(--space-4)", animation: "spin 1s linear infinite" }}>⏳</div>
-                    <p>Generating...</p>
+                    <p style={{ fontSize: "1.2rem", fontWeight: 600 }}>Generating...</p>
+                    <p style={{ color: "var(--text-muted)", marginTop: "var(--space-2)" }}>{statusMessage}</p>
+                    <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "var(--space-4)", maxWidth: "400px", marginInline: "auto" }}>
+                        Note: Krea Video generation is complex and takes time.
+                        Usage logs will appear in your <strong>Fal.ai</strong> dashboard.
+                    </p>
                 </div>
             )}
+
 
             {!loading && step === 1 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>

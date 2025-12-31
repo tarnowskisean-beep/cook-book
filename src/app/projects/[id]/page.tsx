@@ -36,9 +36,14 @@ export default async function ProjectDetailPage({ params }: Props) {
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-6)" }}>
                 <h2 style={{ fontSize: "1.5rem" }}>Products ({project.products.length})</h2>
-                <Link href={`/products/new?projectId=${project.id}`} className="btn btn-primary">
-                    + Add Product
-                </Link>
+                <div style={{ display: 'flex', gap: 'var(--space-4)' }}>
+                    <Link href={`/projects/${project.id}/edit`} className="btn" style={{ background: "var(--bg-contrast)", border: "1px solid var(--border-color)" }}>
+                        ⚙️ Settings
+                    </Link>
+                    <Link href={`/products/new?projectId=${project.id}`} className="btn btn-primary">
+                        + Add Product
+                    </Link>
+                </div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "var(--space-6)" }}>

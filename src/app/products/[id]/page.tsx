@@ -37,9 +37,14 @@ export default async function ProductDetailPage({ params }: Props) {
                             <h1 style={{ fontSize: "3rem", margin: 0, fontFamily: "var(--font-serif)" }}>{product.name}</h1>
                             <p style={{ fontSize: "1.2rem", color: "var(--text-muted)", marginTop: "var(--space-2)" }}>{product.description}</p>
                         </div>
-                        <Link href={`/products/${product.id}/generate`} className="btn btn-primary">
-                            ✨ Generate Content
-                        </Link>
+                        <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+                            <Link href={`/products/${product.id}/edit`} className="btn" style={{ background: "var(--bg-contrast)", border: "1px solid var(--border-color)" }}>
+                                ✏️ Edit
+                            </Link>
+                            <Link href={`/products/${product.id}/generate`} className="btn btn-primary">
+                                ✨ Generate Content
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </header>

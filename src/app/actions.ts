@@ -243,6 +243,103 @@ export async function createProduct(formData: FormData) {
 // DEPRECATED: Old numeric setting actions removed in favor of text-based Personas.
 // See src/app/personas/actions.ts for new logic.
 
+
+export async function updateProject(id: string, formData: FormData) {
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
+    const personaId = formData.get('personaId') as string;
+
+    const isAutopilot = formData.get('isAutopilot') === 'on';
+    const postsPerDay = Number(formData.get('postsPerDay')) || 1;
+    const autopilotConfig = isAutopilot ? JSON.stringify({ postsPerDay }) : null;
+
+    try {
+        await prisma.project.update({
+            where: { id },
+            data: {
+                title,
+                description,
+                personaId: personaId || null,
+                isAutopilot,
+                autopilotConfig
+            }
+        });
+        revalidatePath(`/projects/${id}`);
+        revalidatePath('/projects');
+        return { success: true };
+    } catch (error: any) {
+        console.error("Failed to update project:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function deleteProject(id: string) {
+    try {
+        await prisma.project.delete({ where: { id } });
+        revalidatePath('/projects');
+        return { success: true };
+    } catch (error: any) {
+        console.error("Failed to delete project:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function updateProduct(id: string, formData: FormData) {
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const features = formData.get('features') as string;
+    const usage = formData.get('usage') as string;
+    const background = formData.get('background') as string;
+
+    // Validate inputs
+    let parsedFeatures = "[]";
+    let parsedUsage = "[]";
+
+    try {
+        if (features.trim().startsWith('[')) {
+            JSON.parse(features);
+            parsedFeatures = features;
+        } else {
+            parsedFeatures = JSON.stringify(features.split('\n').filter(line => line.trim() !== ''));
+        }
+
+        if (usage.trim().startsWith('[')) {
+            JSON.parse(usage);
+            parsedUsage = usage;
+        } else {
+            parsedUsage = JSON.stringify(usage.split('\n').filter(line => line.trim() !== ''));
+        }
+
+        await prisma.product.update({
+            where: { id },
+            data: {
+                name,
+                description,
+                features: parsedFeatures,
+                usage: parsedUsage,
+                background: background || null
+            }
+        });
+
+        revalidatePath(`/products/${id}`);
+        return { success: true };
+    } catch (error: any) {
+        console.error("Failed to update product:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function deleteProduct(id: string) {
+    try {
+        await prisma.product.delete({ where: { id } });
+        revalidatePath('/products');
+        return { success: true };
+    } catch (error: any) {
+        console.error("Failed to delete product:", error);
+        return { success: false, error: error.message };
+    }
+}
+
 export async function generateImageAction(prompt: string) {
     return await generateImage(prompt);
 }

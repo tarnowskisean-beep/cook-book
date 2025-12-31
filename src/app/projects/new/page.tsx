@@ -1,5 +1,5 @@
 import prisma from '@/lib/prisma';
-import NewProjectForm from './NewProjectForm';
+import ProjectForm from '@/components/ProjectForm';
 
 export default async function NewProjectPage() {
     const personas = await prisma.persona.findMany({
@@ -24,7 +24,7 @@ export default async function NewProjectPage() {
                     </a>
                 </div>
             ) : (
-                <NewProjectForm personas={personas} />
+                <ProjectForm personas={personas} />
             )}
         </div>
     );

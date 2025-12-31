@@ -1,5 +1,5 @@
 import prisma from '@/lib/prisma';
-import NewProductForm from './NewProductForm';
+import ProductForm from '@/components/ProductForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +17,7 @@ export default async function NewProductPage() {
                 <p style={{ color: "var(--text-muted)" }}>Add a new item to the product log.</p>
             </header>
 
-            <NewProductForm projects={projects} />
+            <ProductForm projects={projects} />
         </div>
     );
 }
