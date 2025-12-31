@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import openai from '@/lib/openai';
+import { generateImage, generateVideo } from '@/lib/krea';
 
 // AI Generation Action
 export async function generateScript(productId: string, platforms: string[]) {
@@ -241,3 +242,11 @@ export async function createProduct(formData: FormData) {
 
 // DEPRECATED: Old numeric setting actions removed in favor of text-based Personas.
 // See src/app/personas/actions.ts for new logic.
+
+export async function generateImageAction(prompt: string) {
+    return await generateImage(prompt);
+}
+
+export async function generateVideoAction(prompt: string) {
+    return await generateVideo(prompt);
+}
