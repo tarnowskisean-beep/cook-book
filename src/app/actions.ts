@@ -53,7 +53,9 @@ export async function generateScript(productId: string, platforms: string[]) {
 
     } catch (error) {
         console.error("AI Generation failed:", error);
-        return { success: false, error: "AI Generation failed" };
+    } catch (error: any) {
+        console.error("AI Generation failed:", error);
+        return { success: false, error: error.message || "AI Generation failed" };
     }
 }
 

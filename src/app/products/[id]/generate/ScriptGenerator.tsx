@@ -41,11 +41,11 @@ export default function ScriptGenerator({ productId, productName }: Props) {
                 setCaption(`Check out the new ${productName}! 🚀 #innovation #product`);
                 setStep(2);
             } else {
-                alert("Failed to generate script. Please check API key.");
+                alert("Generation failed: " + (result.error || "Unknown error"));
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert("Error generating script");
+            alert("Error: " + e.message);
         } finally {
             setLoading(false);
         }
