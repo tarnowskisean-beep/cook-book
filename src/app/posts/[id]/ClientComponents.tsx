@@ -1,8 +1,7 @@
 "use client";
 
 import { useTransition, useState } from "react";
-
-import { updatePostMedia } from "../actions";
+import { cancelPost, updatePostScript, updatePostMedia } from "../actions";
 
 export function MediaManager({ postId, contentId, url, type }: { postId: string, contentId: string, url: string, type: string }) {
     const [isPending, startTransition] = useTransition();
@@ -47,8 +46,15 @@ export function MediaManager({ postId, contentId, url, type }: { postId: string,
                         <input type="hidden" name="postId" value={postId} />
                         <input type="hidden" name="contentId" value={contentId} />
 
-                        <label style={{ display: "block", marginBottom: "var(--space-2)", fontSize: "0.9rem" }}>New Media URL:</label>
-                        <div style={{ display: "flex", gap: "var(--space-2)" }}>
+                        <div style={{ display: "flex", gap: "var(--space-2)", marginBottom: "var(--space-2)" }}>
+                            <select
+                                name="type"
+                                defaultValue={type}
+                                style={{ padding: "var(--space-2)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", background: "var(--bg-paper)", color: "var(--text-main)" }}
+                            >
+                                <option value="IMAGE">Image</option>
+                                <option value="VIDEO">Video</option>
+                            </select>
                             <input
                                 type="text"
                                 name="url"
@@ -57,8 +63,10 @@ export function MediaManager({ postId, contentId, url, type }: { postId: string,
                                 defaultValue={url}
                                 style={{ flex: 1, padding: "var(--space-2)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", background: "var(--bg-paper)", color: "var(--text-main)" }}
                             />
+                        </div>
+                        <div style={{ textAlign: "right" }}>
                             <button type="submit" disabled={isPending} className="btn btn-primary">
-                                {isPending ? "Saving..." : "Update"}
+                                {isPending ? "Saving..." : "Update Media"}
                             </button>
                         </div>
                     </form>
