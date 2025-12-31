@@ -11,12 +11,11 @@ fal.config({
  */
 export async function generateImage(prompt: string, aspectRatio: "16:9" | "9:16" | "1:1" = "16:9") {
     try {
-        const result: any = await fal.subscribe("fal-ai/flux-realism", {
+        const result: any = await fal.subscribe("fal-ai/flux-pro/v1.1", {
             input: {
                 prompt,
                 image_size: aspectRatio === "16:9" ? "landscape_16_9" : aspectRatio === "9:16" ? "portrait_16_9" : "square_hd",
-                num_inference_steps: 25,
-                guidance_scale: 3.5
+                safety_tolerance: "2", // allow some flexibility
             },
             logs: true,
             onQueueUpdate: (update) => {
