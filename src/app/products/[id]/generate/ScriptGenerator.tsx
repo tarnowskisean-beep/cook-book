@@ -11,6 +11,9 @@ interface Props {
 
 export default function ScriptGenerator({ productId, productName }: Props) {
     const router = useRouter();
+    const [step, setStep] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [statusMessage, setStatusMessage] = useState<string>("");
 
     // ... (existing code)
