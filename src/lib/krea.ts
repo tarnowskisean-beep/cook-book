@@ -17,8 +17,7 @@ export async function generateImage(prompt: string, aspectRatio: "16:9" | "9:16"
                 prompt,
                 image_size: aspectRatio === "16:9" ? "landscape_16_9" : aspectRatio === "9:16" ? "portrait_16_9" : "square_hd",
                 num_inference_steps: 28, // Krea recommended steps often around 25-30
-                guidance_scale: 3.5,
-                safety_tolerance: "2"
+                guidance_scale: 3.5
             },
             logs: true,
             onQueueUpdate: (update) => {
