@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import openai from '@/lib/openai';
-import { generateImage, generateVideo } from '@/lib/krea';
+import { generateImage, submitVideo, checkVideoStatus } from '@/lib/krea';
 
 // AI Generation Action
 export async function generateScript(productId: string, platforms: string[]) {
@@ -247,6 +247,10 @@ export async function generateImageAction(prompt: string) {
     return await generateImage(prompt);
 }
 
-export async function generateVideoAction(prompt: string) {
-    return await generateVideo(prompt);
+export async function submitVideoAction(prompt: string) {
+    return await submitVideo(prompt);
+}
+
+export async function checkVideoStatusAction(requestId: string) {
+    return await checkVideoStatus(requestId);
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { saveContent, schedulePost, generateScript, generateVideoAction } from '@/app/actions';
+import { saveContent, schedulePost, generateScript, submitVideoAction, checkVideoStatusAction } from '@/app/actions';
 
 interface Props {
     productId: string;
@@ -54,17 +54,50 @@ export default function ScriptGenerator({ productId, productName }: Props) {
     const handleGenerateVideo = async () => {
         setLoading(true);
         try {
-            const result = await generateVideoAction(script);
-            if (result.success && result.url) {
-                setVideoUrl(result.url);
-                setStep(3);
-            } else {
-                alert("Failed to generate video: " + (result.error || "Unknown error"));
+            // 1. Submit Job
+            const submitResult = await submitVideoAction(script);
+            if (!submitResult.success || !submitResult.requestId) {
+                alert("Failed to start video generation: " + (submitResult.error || "Unknown error"));
+                setLoading(false);
+                return;
             }
+
+            const requestId = submitResult.requestId;
+
+            // 2. Poll for Status
+            const pollInterval = setInterval(async () => {
+                try {
+                    const statusResult = await checkVideoStatusAction(requestId);
+
+                    if (!statusResult.success) {
+                        clearInterval(pollInterval);
+                        setLoading(false);
+                        alert("Video generation error: " + statusResult.error);
+                        return;
+                    }
+
+                    if (statusResult.status === "COMPLETED" && statusResult.url) {
+                        clearInterval(pollInterval);
+                        setVideoUrl(statusResult.url);
+                        setStep(3);
+                        setLoading(false);
+                    } else if (statusResult.status === "FAILED" || statusResult.status === "CANCELLED") {
+                        clearInterval(pollInterval);
+                        setLoading(false);
+                        alert("Video generation failed.");
+                    }
+                    // Else: IN_PROGRESS or QUEUED, continue polling
+                    console.log("Polling video status:", statusResult.status);
+
+                } catch (e) {
+                    console.error("Polling error", e);
+                    // Don't stop polling on single transient error, but maybe count retries strictly
+                }
+            }, 3000); // Check every 3 seconds
+
         } catch (e) {
             console.error(e);
-            alert("Error generating video");
-        } finally {
+            alert("Error initiating video generation");
             setLoading(false);
         }
     };

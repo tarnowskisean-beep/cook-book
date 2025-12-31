@@ -40,30 +40,49 @@ export async function generateImage(prompt: string, aspectRatio: "16:9" | "9:16"
  * Generate a video using Krea's model (Wan-14b via Fal).
  * This supports Text-to-Video.
  */
-export async function generateVideo(prompt: string) {
+/**
+ * Submit a video generation job (Async).
+ * Returns requestId to check status later.
+ */
+export async function submitVideo(prompt: string) {
     try {
-        // Using Krea Wan 14b model
-        const result: any = await fal.subscribe("fal-ai/krea-wan-14b/text-to-video", {
+        const result = await fal.queue.submit("fal-ai/krea-wan-14b/text-to-video", {
             input: {
                 prompt,
-                // Using explicit dimensions for vertical video as aspect_ratio might not be typed
                 width: 720,
                 height: 1280
-            } as any,
-            logs: true,
-            onQueueUpdate: (update) => {
-                if (update.status === "IN_PROGRESS") {
-                    console.log("Fal Video Generation:", update.logs.map((log) => log.message));
-                }
-            },
+            }
+        });
+        return { success: true, requestId: result.requestId };
+    } catch (error: any) {
+        console.error("Fal Submit error:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Check the status of a video generation job.
+ */
+export async function checkVideoStatus(requestId: string) {
+    try {
+        const status = await fal.queue.status("fal-ai/krea-wan-14b/text-to-video", {
+            requestId,
+            logs: true
         });
 
-        if (result.video && result.video.url) {
-            return { success: true, url: result.video.url };
+        if (status.status === "COMPLETED") {
+            // The result is in status.data (or we might need to fetch result separately depending on client version, 
+            // but @fal-ai/client usually includes payload in completed status or we call result).
+            // Actually, for queue, we might need fal.queue.result(requestId).
+            // Let's rely on fal.queue.result for the final payload.
+            const result: any = await fal.queue.result("fal-ai/krea-wan-14b/text-to-video", { requestId });
+            if (result.video && result.video.url) {
+                return { success: true, status: "COMPLETED", url: result.video.url };
+            }
         }
-        return { success: false, error: "No video returned" };
+        return { success: true, status: status.status }; // IN_PROGRESS, QUEUED, etc.
     } catch (error: any) {
-        console.error("Fal Video error:", error);
+        console.error("Fal Status error:", error);
         return { success: false, error: error.message };
     }
 }
