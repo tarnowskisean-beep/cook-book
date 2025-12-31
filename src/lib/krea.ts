@@ -59,20 +59,18 @@ export async function generateImage(prompt: string, aspectRatio: "16:9" | "9:16"
  */
 export async function submitVideo(prompt: string, imageUrl?: string) {
     try {
-        // Kling Standard Endpoints
-        const endpoint = imageUrl
-            ? "fal-ai/kling-video/v1/standard/image-to-video"
-            : "fal-ai/kling-video/v1/standard/text-to-video";
+        // User requested Krea for video (prioritizing quality over avatars)
+        // Endpoint: fal-ai/krea-wan-14b/text-to-video
+        // Note: For now we ignore imageUrl to ensure we use the specific Krea text model requested.
+        const endpoint = "fal-ai/krea-wan-14b/text-to-video";
 
         const input: any = {
             prompt,
-            aspect_ratio: "9:16", // vertical video for social
-            duration: "5s"
+            aspect_ratio: "9:16",
+            duration: 5
         };
 
-        if (imageUrl) {
-            input.image_url = imageUrl;
-        }
+        console.log("Submitting Krea Video (Wan 14b):", { prompt });
 
         const result = await fal.queue.submit(endpoint, { input });
         return { success: true, requestId: result.request_id };
@@ -89,6 +87,7 @@ export async function checkVideoStatus(requestId: string, isImageToVideo: boolea
     // We check both queues to cover cases where we don't know the type,
     // prioritizing the most likely based on context if simpler, but here we just iterate.
     const endpoints = [
+        "fal-ai/krea-wan-14b/text-to-video",
         "fal-ai/kling-video/v1/standard/text-to-video",
         "fal-ai/kling-video/v1/standard/image-to-video"
     ];

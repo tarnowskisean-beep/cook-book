@@ -20,7 +20,8 @@ export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VI
         const features = JSON.parse(product.features || "[]").join(", ");
         const persona = product.project.persona;
         const visualStyle = persona?.visualDescription ? `Visual Style: ${persona.visualDescription}` : "";
-        const avatarNote = (type === 'VIDEO' && persona?.avatarImage) ? "Note: The video will start with the persona's avatar. Ensure the action flows naturally from a character introduction." : "";
+        // Avatar use disabled to prioritize Krea Video quality
+        // const avatarNote = ...
 
         const systemPrompt = persona?.description
             ? `You are this persona: ${persona.description}. Be creative, varied, and avoid repetition.`
@@ -51,20 +52,20 @@ export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VI
                 }
             `;
         } else {
-            // VIDEO: Kling specific structure
+            // VIDEO: Krea Wan Structure
             userPrompt = `
                 Product: "${product.name}"
                 Description: "${product.description}"
                 Key Features: ${features}
                 ${visualStyle}
-                ${avatarNote}
 
                 Task:
-                1. Write a **Visual Prompt** for AI Video (Kling). It MUST follow this specific structure:
-                   "[Main Subject & Action] + [Camera Motion] + [Environment/Lighting] + [Style/Quality]"
+                1. Write a **Visual Prompt** for AI Video (Krea / Wan 14b).
+                   - It MUST be formatted for **high-end social media** (cinematic, vertical).
+                   - **Structure:** [Main Subject & Action] + [Camera Motion] + [Environment/Lighting] + [Style/Quality]
                    - Keep it under 50 words.
                    - Be extremely specific about movement (e.g., "slow pan", "dynamic zoom", "steam rising").
-                   - If using an avatar, describe them performing a natural action relevant to the product.
+                   - DO NOT mention "avatar" or character consistency; focus on the product and scene.
                 
                 2. Write a **Voiceover Script** (or caption) for social media (${platforms.join(', ')}).
 
