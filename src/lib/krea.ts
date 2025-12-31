@@ -102,9 +102,16 @@ export async function checkVideoStatus(requestId: string, isImageToVideo: boolea
             if (status) {
                 if (status.status === "COMPLETED") {
                     const result: any = await fal.queue.result(endpoint, { requestId });
-                    if (result.video && result.video.url) {
-                        return { success: true, status: "COMPLETED", url: result.video.url };
+
+                    // Robust check for different response formats
+                    // Krea often uses 'file' or 'url' at top level, Kling uses 'video.url'
+                    const videoUrl = result.video?.url || result.file?.url || result.url;
+
+                    if (videoUrl) {
+                        return { success: true, status: "COMPLETED", url: videoUrl };
                     }
+                    console.error("Video Completed but no URL found. Result:", JSON.stringify(result));
+                    return { success: false, error: "Completed but no URL returned" };
                 }
                 // If found and not completed, return status
                 return { success: true, status: status.status };
