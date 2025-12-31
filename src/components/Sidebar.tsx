@@ -34,7 +34,7 @@ export default function Sidebar() {
                     color: "var(--color-primary)",
                     fontFamily: "var(--font-heading)"
                 }}>
-                    AI Social Media Assistant
+                    AI Social Media Assistant v2.0
                 </h2>
             </div>
 
