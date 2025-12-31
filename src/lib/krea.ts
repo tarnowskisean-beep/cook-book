@@ -51,7 +51,7 @@ export async function submitVideo(prompt: string) {
                 prompt,
                 width: 720,
                 height: 1280
-            }
+            } as any
         });
         return { success: true, requestId: result.requestId };
     } catch (error: any) {
