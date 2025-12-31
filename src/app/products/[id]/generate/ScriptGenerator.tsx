@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { saveContent, schedulePost, generateScript, submitVideoAction, checkVideoStatusAction } from '@/app/actions';
+import { saveContent, schedulePost, generateMediaPrompt, submitVideoAction, checkVideoStatusAction, generateImageAction } from '@/app/actions';
 
 interface Props {
     productId: string;
     productName: string;
 }
+
+type MediaType = 'IMAGE' | 'VIDEO';
 
 export default function ScriptGenerator({ productId, productName }: Props) {
     const router = useRouter();
@@ -19,14 +21,17 @@ export default function ScriptGenerator({ productId, productName }: Props) {
     const [statusMessage, setStatusMessage] = useState<string>("");
 
     // Data State
+    const [mediaType, setMediaType] = useState<MediaType>('VIDEO');
     const [platforms, setPlatforms] = useState<string[]>(['Instagram']);
-    const [script, setScript] = useState('');
+
+    // Content State
+    const [visualPrompt, setVisualPrompt] = useState('');
     const [caption, setCaption] = useState('');
-    const [videoUrl, setVideoUrl] = useState('');
+    const [generatedUrl, setGeneratedUrl] = useState('');
 
     const togglePlatform = (p: string) => {
         if (platforms.includes(p)) {
-            if (platforms.length > 1) { // Prevent unselecting last one
+            if (platforms.length > 1) {
                 setPlatforms(platforms.filter(item => item !== p));
             }
         } else {
@@ -34,15 +39,15 @@ export default function ScriptGenerator({ productId, productName }: Props) {
         }
     };
 
-    const handleGenerateScript = async () => {
+    const handleGeneratePrompt = async () => {
         setLoading(true);
-        setStatusMessage("Generating script with OpenAI...");
+        setStatusMessage("Designing visual concept & script...");
         try {
-            const result = await generateScript(productId, platforms);
+            const result = await generateMediaPrompt(productId, mediaType, platforms);
 
-            if (result.success && result.script) {
-                setScript(result.script);
-                setCaption(`Check out the new ${productName}! 🚀 #innovation #product`);
+            if (result.success && result.prompt) {
+                setVisualPrompt(result.prompt);
+                setCaption(result.caption || "");
                 setStep(2);
             } else {
                 alert("Generation failed: " + (result.error || "Unknown error"));
@@ -55,57 +60,73 @@ export default function ScriptGenerator({ productId, productName }: Props) {
         }
     };
 
-    const handleGenerateVideo = async () => {
+    const handleGenerateContent = async () => {
         setLoading(true);
-        setStatusMessage("Submitting job to Fal.ai (Krea Model)...");
-        try {
-            // 1. Submit Job
-            const submitResult = await submitVideoAction(script, productId);
-            if (!submitResult.success || !submitResult.requestId) {
-                alert("Failed to start video generation: " + (submitResult.error || "Unknown error"));
+        setGeneratedUrl("");
+
+        if (mediaType === 'IMAGE') {
+            setStatusMessage("Generating Image with Flux Realism...");
+            try {
+                const result = await generateImageAction(visualPrompt);
+                if (result.success && result.url) {
+                    setGeneratedUrl(result.url);
+                    setStep(3);
+                } else {
+                    alert("Image generation failed: " + result.error);
+                }
+            } catch (e: any) {
+                alert("Error: " + e.message);
+            } finally {
                 setLoading(false);
-                return;
             }
 
-            const requestId = submitResult.requestId;
-            setStatusMessage("Job submitted. Waiting for processing...");
-
-            // 2. Poll for Status
-            const pollInterval = setInterval(async () => {
-                try {
-                    const statusResult = await checkVideoStatusAction(requestId);
-
-                    if (!statusResult.success) {
-                        clearInterval(pollInterval);
-                        setLoading(false);
-                        alert("Video generation error: " + statusResult.error);
-                        return;
-                    }
-
-                    if (statusResult.status === "COMPLETED" && statusResult.url) {
-                        clearInterval(pollInterval);
-                        setVideoUrl(statusResult.url);
-                        setStep(3);
-                        setLoading(false);
-                    } else if (statusResult.status === "FAILED" || statusResult.status === "CANCELLED") {
-                        clearInterval(pollInterval);
-                        setLoading(false);
-                        alert("Video generation failed.");
-                    } else {
-                        // Else: IN_PROGRESS or QUEUED
-                        setStatusMessage(`Status: ${statusResult.status} (Please wait, video takes ~2 mins)...`);
-                        console.log("Polling video status:", statusResult.status);
-                    }
-
-                } catch (e) {
-                    console.error("Polling error", e);
+        } else {
+            // VIDEO
+            setStatusMessage("Submitting Video Job to Kling AI...");
+            try {
+                const submitResult = await submitVideoAction(visualPrompt, productId);
+                if (!submitResult.success || !submitResult.requestId) {
+                    alert("Failed to start video generation: " + (submitResult.error || "Unknown error"));
+                    setLoading(false);
+                    return;
                 }
-            }, 3000); // Check every 3 seconds
 
-        } catch (e) {
-            console.error(e);
-            alert("Error initiating video generation");
-            setLoading(false);
+                const requestId = submitResult.requestId;
+                setStatusMessage("Job submitted. Waiting for Kling...");
+
+                const pollInterval = setInterval(async () => {
+                    try {
+                        const statusResult = await checkVideoStatusAction(requestId);
+
+                        if (!statusResult.success) {
+                            clearInterval(pollInterval);
+                            setLoading(false);
+                            alert("Video generation error: " + statusResult.error);
+                            return;
+                        }
+
+                        if (statusResult.status === "COMPLETED" && statusResult.url) {
+                            clearInterval(pollInterval);
+                            setGeneratedUrl(statusResult.url);
+                            setStep(3);
+                            setLoading(false);
+                        } else if (statusResult.status === "FAILED" || statusResult.status === "CANCELLED") {
+                            clearInterval(pollInterval);
+                            setLoading(false);
+                            alert("Video generation failed.");
+                        } else {
+                            setStatusMessage(`Status: ${statusResult.status} (Avg wait: 2-3 mins)...`);
+                        }
+                    } catch (e) {
+                        console.error("Polling error", e);
+                    }
+                }, 4000);
+
+            } catch (e) {
+                console.error(e);
+                alert("Error initiating video generation");
+                setLoading(false);
+            }
         }
     };
 
@@ -114,10 +135,10 @@ export default function ScriptGenerator({ productId, productName }: Props) {
         try {
             const result = await saveContent(
                 productId,
-                'VIDEO',
-                videoUrl,
+                mediaType,
+                generatedUrl,
                 platforms,
-                script
+                caption
             );
 
             if (result.success && result.data) {
@@ -127,7 +148,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
 
                 await schedulePost(contentIds, tomorrow.toISOString());
 
-                alert(`Content saved and scheduled for ${platforms.length} platforms!`);
+                alert(`Content saved and scheduled!`);
                 router.push(`/products/${productId}`);
             } else {
                 alert("Failed to save content.");
@@ -144,7 +165,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
         <div className="card" style={{ maxWidth: "800px", minHeight: "600px" }}>
             {/* Progress Stepper */}
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--space-8)", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "var(--space-4)" }}>
-                {['Configuration', 'Script Review', 'Preview & Save'].map((label, i) => (
+                {['Setup', 'Review', 'Preview'].map((label, i) => (
                     <div key={label} style={{ color: step > i ? "#4ade80" : step === i + 1 ? "var(--color-primary-light)" : "var(--text-muted)", fontWeight: step === i + 1 ? 600 : 400 }}>
                         {i + 1}. {label}
                     </div>
@@ -154,19 +175,49 @@ export default function ScriptGenerator({ productId, productName }: Props) {
             {loading && (
                 <div style={{ textAlign: "center", padding: "var(--space-12)" }}>
                     <div style={{ fontSize: "2rem", marginBottom: "var(--space-4)", animation: "spin 1s linear infinite" }}>⏳</div>
-                    <p style={{ fontSize: "1.2rem", fontWeight: 600 }}>Generating...</p>
+                    <p style={{ fontSize: "1.2rem", fontWeight: 600 }}>Working...</p>
                     <p style={{ color: "var(--text-muted)", marginTop: "var(--space-2)" }}>{statusMessage}</p>
-                    <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "var(--space-4)", maxWidth: "400px", marginInline: "auto" }}>
-                        Note: Krea Video generation is complex and takes time.
-                        Usage logs will appear in your <strong>Fal.ai</strong> dashboard.
-                    </p>
                 </div>
             )}
 
-
             {!loading && step === 1 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
-                    <h2 style={{ fontSize: "1.5rem" }}>Content Settings <span style={{ fontSize: "0.8rem", color: "#666" }}>(v2.0)</span></h2>
+                    {/* Media Selection */}
+                    <div>
+                        <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: 500 }}>Content Type</label>
+                        <div style={{ display: "flex", gap: "var(--space-4)" }}>
+                            <button
+                                onClick={() => setMediaType('VIDEO')}
+                                style={{
+                                    flex: 1,
+                                    padding: "var(--space-4)",
+                                    borderRadius: "var(--radius-md)",
+                                    border: mediaType === 'VIDEO' ? "2px solid var(--color-primary)" : "1px solid var(--border-color)",
+                                    background: mediaType === 'VIDEO' ? "rgba(var(--primary-h), var(--primary-s), var(--primary-l), 0.1)" : "var(--bg-paper)",
+                                    cursor: "pointer",
+                                    textAlign: "center"
+                                }}
+                            >
+                                <span style={{ fontSize: "1.5rem", display: "block", marginBottom: "4px" }}>🎬</span>
+                                <span style={{ fontWeight: 600 }}>Video</span>
+                            </button>
+                            <button
+                                onClick={() => setMediaType('IMAGE')}
+                                style={{
+                                    flex: 1,
+                                    padding: "var(--space-4)",
+                                    borderRadius: "var(--radius-md)",
+                                    border: mediaType === 'IMAGE' ? "2px solid var(--color-primary)" : "1px solid var(--border-color)",
+                                    background: mediaType === 'IMAGE' ? "rgba(var(--primary-h), var(--primary-s), var(--primary-l), 0.1)" : "var(--bg-paper)",
+                                    cursor: "pointer",
+                                    textAlign: "center"
+                                }}
+                            >
+                                <span style={{ fontSize: "1.5rem", display: "block", marginBottom: "4px" }}>📸</span>
+                                <span style={{ fontWeight: 600 }}>Image</span>
+                            </button>
+                        </div>
+                    </div>
 
                     <div>
                         <label style={{ display: "block", marginBottom: "var(--space-2)" }}>Target Platforms</label>
@@ -196,26 +247,32 @@ export default function ScriptGenerator({ productId, productName }: Props) {
                     </div>
 
                     <div style={{ marginTop: "var(--space-4)" }}>
-                        <button onClick={handleGenerateScript} className="btn btn-primary" style={{ width: "100%" }}>Generate Script</button>
+                        <button onClick={handleGeneratePrompt} className="btn btn-primary" style={{ width: "100%" }}>
+                            Next: Generate Concept
+                        </button>
                     </div>
                 </div>
             )}
 
             {!loading && step === 2 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
-                    <h2 style={{ fontSize: "1.5rem" }}>Review Script</h2>
+                    <h2 style={{ fontSize: "1.5rem" }}>Review Concept</h2>
 
                     <div>
-                        <label style={{ display: "block", marginBottom: "var(--space-2)" }}>Voiceover Script (Optimized for {platforms.join(', ')})</label>
+                        <label style={{ display: "block", marginBottom: "var(--space-2)" }}>
+                            AI Visual Prompt ({mediaType === 'VIDEO' ? 'Kling Video' : 'Flux Image'})
+                        </label>
                         <textarea
-                            value={script}
-                            onChange={(e) => setScript(e.target.value)}
-                            style={{ width: "100%", height: "200px", padding: "var(--space-4)", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "var(--radius-md)", color: "var(--text-main)", fontFamily: "monospace" }}
+                            value={visualPrompt}
+                            onChange={(e) => setVisualPrompt(e.target.value)}
+                            style={{ width: "100%", height: "120px", padding: "var(--space-4)", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "var(--radius-md)", color: "var(--text-main)", fontFamily: "monospace" }}
                         />
                     </div>
 
                     <div>
-                        <label style={{ display: "block", marginBottom: "var(--space-2)" }}>Suggested Caption</label>
+                        <label style={{ display: "block", marginBottom: "var(--space-2)" }}>
+                            {mediaType === 'VIDEO' ? 'Voiceover / Caption' : 'Caption'}
+                        </label>
                         <textarea
                             value={caption}
                             onChange={(e) => setCaption(e.target.value)}
@@ -225,7 +282,9 @@ export default function ScriptGenerator({ productId, productName }: Props) {
 
                     <div style={{ display: "flex", gap: "var(--space-4)" }}>
                         <button onClick={() => setStep(1)} className="btn" style={{ background: "rgba(255,255,255,0.1)" }}>Back</button>
-                        <button onClick={handleGenerateVideo} className="btn btn-primary" style={{ flex: 1 }}>Generate Video (Krea AI)</button>
+                        <button onClick={handleGenerateContent} className="btn btn-primary" style={{ flex: 1 }}>
+                            Generate {mediaType === 'VIDEO' ? 'Video' : 'Image'}
+                        </button>
                     </div>
                 </div>
             )}
@@ -234,8 +293,12 @@ export default function ScriptGenerator({ productId, productName }: Props) {
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
                     <h2 style={{ fontSize: "1.5rem" }}>Preview Content</h2>
 
-                    <div style={{ aspectRatio: "16/9", background: "#000", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
-                        <video src={videoUrl} controls style={{ maxWidth: "100%", maxHeight: "100%" }} />
+                    <div style={{ aspectRatio: mediaType === 'VIDEO' ? "9/16" : "16/9", maxHeight: "500px", background: "#000", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "var(--radius-md)", overflow: "hidden", marginInline: "auto", width: "100%" }}>
+                        {mediaType === 'VIDEO' ? (
+                            <video src={generatedUrl} controls autoPlay loop style={{ maxWidth: "100%", maxHeight: "100%" }} />
+                        ) : (
+                            <img src={generatedUrl} alt="Generated" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                        )}
                     </div>
 
                     <div style={{ fontSize: "0.9rem", color: "var(--text-muted)", textAlign: "center" }}>

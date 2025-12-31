@@ -7,7 +7,8 @@ import openai from '@/lib/openai';
 import { generateImage, submitVideo, checkVideoStatus } from '@/lib/krea';
 
 // AI Generation Action
-export async function generateScript(productId: string, platforms: string[]) {
+// AI Generation Action
+export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VIDEO', platforms: string[]) {
     try {
         const product = await prisma.product.findUnique({
             where: { id: productId },
@@ -17,44 +18,79 @@ export async function generateScript(productId: string, platforms: string[]) {
         if (!product) return { success: false, error: 'Product not found' };
 
         const features = JSON.parse(product.features || "[]").join(", ");
-        const usage = JSON.parse(product.usage || "[]").join(", ");
+        const persona = product.project.persona;
+        const visualStyle = persona?.visualDescription ? `Visual Style: ${persona.visualDescription}` : "";
+        const avatarNote = (type === 'VIDEO' && persona?.avatarImage) ? "Note: The video will start with the persona's avatar. Ensure the action flows naturally from a character introduction." : "";
 
-        const systemPrompt = product.project.persona?.description
-            ? `You are this persona: ${product.project.persona.description}.`
+        const systemPrompt = persona?.description
+            ? `You are this persona: ${persona.description}.`
             : `You are a helpful social media assistant.`;
 
-        const userPrompt = `
-            Product: "${product.name}"
-            Description: "${product.description}"
-            Key Features: ${features}
-            Usage/Details: ${usage}
-            Background/Why: ${product.background || "N/A"}
+        let userPrompt = "";
 
-            Write a script/caption for these platforms: ${platforms.join(', ')}.
-            Include:
-            1. Hook
-            2. Main Content (Highlighting features)
-            3. Call to Action
-            
-            Format: Plain Text.
-        `;
+        if (type === 'IMAGE') {
+            userPrompt = `
+                Product: "${product.name}"
+                Description: "${product.description}"
+                Key Features: ${features}
+                ${visualStyle}
+
+                Task:
+                1. Write a **Visual Prompt** for an AI Image Generator (Flux Realism). It should be detailed, photorealistic, and highlight the product features.
+                2. Write a **Caption** for social media (${platforms.join(', ')}).
+
+                Output JSON format:
+                {
+                    "prompt": "The detailed visual prompt...",
+                    "caption": "The social media caption..."
+                }
+            `;
+        } else {
+            userPrompt = `
+                Product: "${product.name}"
+                Description: "${product.description}"
+                Key Features: ${features}
+                ${visualStyle}
+                ${avatarNote}
+
+                Task:
+                1. Write a **Visual Prompt** for an AI Video Generator (Kling). Describe the camera movement, action, and scene. Keep it under 400 characters for best results.
+                2. Write a **Voiceover Script** (or caption if voiceover not needed) for social media (${platforms.join(', ')}).
+
+                Output JSON format:
+                {
+                    "prompt": "The video generation prompt...",
+                    "caption": "The script/caption..."
+                }
+            `;
+        }
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [
                 { role: "system", content: systemPrompt },
                 { role: "user", content: userPrompt }
-            ]
+            ],
+            response_format: { type: "json_object" }
         });
 
-        const script = completion.choices[0].message.content || "Failed to generate.";
+        const content = JSON.parse(completion.choices[0].message.content || "{}");
 
-        return { success: true, script };
+        return {
+            success: true,
+            prompt: content.prompt,
+            caption: content.caption
+        };
 
     } catch (error: any) {
         console.error("AI Generation failed:", error);
         return { success: false, error: error.message || "AI Generation failed" };
     }
+}
+
+// Deprecated: Old generateScript
+export async function generateScript(productId: string, platforms: string[]) {
+    return generateMediaPrompt(productId, 'VIDEO', platforms);
 }
 
 export async function saveContent(productId: string, type: string, url: string, platforms: string[], script: string) {
