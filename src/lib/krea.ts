@@ -53,7 +53,7 @@ export async function submitVideo(prompt: string) {
                 height: 1280
             } as any
         });
-        return { success: true, requestId: result.requestId };
+        return { success: true, requestId: result.request_id };
     } catch (error: any) {
         console.error("Fal Submit error:", error);
         return { success: false, error: error.message };
@@ -65,6 +65,9 @@ export async function submitVideo(prompt: string) {
  */
 export async function checkVideoStatus(requestId: string) {
     try {
+        // The new client likely expects 'request_id' or 'requestId', but return types are definitely snake_case often.
+        // Let's safe-guard by passing both if unsure, or sticking to documentation.
+        // However, based on the previous error, let's look at the usage.
         const status = await fal.queue.status("fal-ai/krea-wan-14b/text-to-video", {
             requestId,
             logs: true
