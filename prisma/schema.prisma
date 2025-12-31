@@ -20,22 +20,23 @@ model Project {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
-  recipes         Recipe[]
+  products        Product[]
   
   personaId       String?
   persona         Persona? @relation(fields: [personaId], references: [id])
 }
 
-model Recipe {
+// RENAMED: Was Recipe
+model Product {
   id           String   @id @default(uuid())
   projectId    String
   name         String
   description  String?
-  ingredients  String   // JSON string
-  instructions String   // JSON string
+  features     String   // Was ingredients. JSON or List of key specs.
+  usage        String   // Was instructions. How to use it.
   images       String   // JSON string or comma-separated
   source       String?
-  originStory  String?  // Backstory/Memory for AI context
+  background   String?  // Was originStory. The "Why" or Backstory.
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -55,15 +56,14 @@ model Persona {
 
 model GeneratedContent {
   id                 String   @id @default(uuid())
-  recipeId           String
   type               String   // VIDEO, IMAGE, CAPTION
   url                String?
   platform           String
   status             String   // DRAFT, SCHEDULED, POSTED
   performanceMetrics String?  // JSON
-  createdAt          DateTime @default(now())
-
-  recipe             Recipe   @relation(fields: [recipeId], references: [id])
+  productId          String
+  
+  product            Product  @relation(fields: [productId], references: [id])
   posts              Post[]
 }
 

@@ -1,9 +1,9 @@
 import prisma from '@/lib/prisma';
-import NewRecipeForm from './NewRecipeForm';
+import NewProductForm from './NewProductForm';
 
 export const dynamic = 'force-dynamic';
 
-export default async function NewRecipePage() {
+export default async function NewProductPage() {
     // Fetch projects for the dropdown
     const projects = await prisma.project.findMany({
         select: { id: true, title: true },
@@ -13,11 +13,11 @@ export default async function NewRecipePage() {
     return (
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
             <header style={{ marginBottom: "var(--space-8)" }}>
-                <h1 style={{ fontSize: "2rem", marginBottom: "var(--space-2)" }}>Add New Recipe</h1>
-                <p style={{ color: "var(--text-muted)" }}>Add a delicious new entry to your cookbook.</p>
+                <h1 style={{ fontSize: "2rem", marginBottom: "var(--space-2)" }}>Add New Product</h1>
+                <p style={{ color: "var(--text-muted)" }}>Add a new item to the product log.</p>
             </header>
 
-            <NewRecipeForm projects={projects} />
+            <NewProductForm projects={projects} />
         </div>
     );
 }

@@ -7,17 +7,19 @@ export const dynamic = 'force-dynamic';
 export default async function ProjectsPage() {
     const projects = await prisma.project.findMany({
         include: {
-            recipes: { select: { id: true } }
+            _count: {
+                select: { products: true }
+            }
         },
         orderBy: { createdAt: 'desc' }
     });
 
     return (
-        <>
-            <header style={{ marginBottom: "var(--space-8)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ maxWidth: "1000px" }}>
+            <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-8)" }}>
                 <div>
-                    <h1 style={{ fontSize: "2rem", marginBottom: "var(--space-2)" }}>Projects</h1>
-                    <p style={{ color: "var(--text-muted)" }}>Manage your cookbook volumes.</p>
+                    <h1 style={{ fontSize: "2rem", marginBottom: "var(--space-2)" }}>All Projects</h1>
+                    <p style={{ color: "var(--text-muted)" }}>Manage your product lines.</p>
                 </div>
                 <Link href="/projects/new" className="btn btn-primary">
                     + New Project
@@ -26,25 +28,27 @@ export default async function ProjectsPage() {
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "var(--space-6)" }}>
                 {projects.map((project) => (
-                    <Link href={`/projects/${project.id}`} key={project.id} className="card" style={{ display: "block", transition: "transform 0.2s ease" }}>
-                        <div style={{
-                            fontSize: "4rem",
-                            marginBottom: "var(--space-4)",
-                            textAlign: "center",
-                            padding: "var(--space-4)",
-                            background: "var(--bg-contrast)",
-                            borderRadius: "var(--radius-md)"
-                        }}>
-                            {project.emoji}
+                    <Link href={`/projects/${project.id}`} key={project.id} className="card" style={{ transition: "transform 0.2s", display: "flex", flexDirection: "column", gap: "var(--space-4)", textDecoration: "none", color: "inherit" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                            <div style={{ fontSize: "3rem" }}>{project.emoji}</div>
+                            {project.isAutopilot && (
+                                <div style={{ fontSize: "0.8rem", background: "rgba(16, 185, 129, 0.1)", color: "#10b981", padding: "2px 8px", borderRadius: "10px" }}>
+                                    Auto
+                                </div>
+                            )}
                         </div>
-                        <h2 style={{ fontSize: "1.25rem", marginBottom: "var(--space-2)" }}>{project.title}</h2>
-                        <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{project.description}</p>
-                        <div style={{ marginTop: "var(--space-4)", display: "flex", gap: "var(--space-4)", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                            <span>📖 {project.recipes.length} Recipes</span>
+                        <div>
+                            <h2 style={{ fontSize: "1.25rem", margin: 0 }}>{project.title}</h2>
+                            <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginTop: "var(--space-2)", lineHeight: "1.5" }}>
+                                {project.description || "No description provided."}
+                            </p>
+                        </div>
+                        <div style={{ marginTop: "auto", paddingTop: "var(--space-4)", borderTop: "1px solid rgba(255,255,255,0.1)", fontSize: "0.9rem", color: "var(--text-muted)" }}>
+                            {project._count.products} Products
                         </div>
                     </Link>
                 ))}
             </div>
-        </>
+        </div>
     );
 }

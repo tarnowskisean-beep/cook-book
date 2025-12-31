@@ -6,59 +6,38 @@ import { redirect } from 'next/navigation';
 import openai from '@/lib/openai';
 
 // AI Generation Action
-export async function generateScript(recipeId: string, platforms: string[]) {
+export async function generateScript(productId: string, platforms: string[]) {
     try {
-        // 1. Fetch Context with Project -> Persona relation
-        const recipe = await prisma.recipe.findUnique({
-            where: { id: recipeId },
-            include: {
-                project: {
-                    include: {
-                        persona: true
-                    }
-                }
-            }
+        const product = await prisma.product.findUnique({
+            where: { id: productId },
+            include: { project: { include: { persona: true } } }
         });
 
-        if (!recipe) throw new Error("Recipe not found");
+        if (!product) return { success: false, error: 'Product not found' };
 
-        // 2. Determine Persona (Project default -> Global default -> Fallback)
-        let persona = recipe.project?.persona;
+        const features = JSON.parse(product.features || "[]").join(", ");
+        const usage = JSON.parse(product.usage || "[]").join(", ");
 
-        if (!persona) {
-            persona = await prisma.persona.findFirst();
-        }
-
-        const personaName = persona?.name || "Dom";
-        const personality = persona?.description || "A helpful AI cooking assistant.";
-        const visuals = persona?.visualDescription || "A friendly digital avatar.";
-
-        // 3. Construct Prompt with Text Descriptions
-        const systemPrompt = `
-            You are ${personaName}.
-            
-            YOUR PERSONALITY:
-            ${personality}
-            
-            YOUR VISUAL STYLE:
-            ${visuals}
-
-            GOAL: Write a viral short-form video script (max 45s) for the provided recipe.
-            Include [VISUAL] cues in brackets adhering to your visual style.
-        `;
+        const systemPrompt = product.project.persona?.description
+            ? `You are this persona: ${product.project.persona.description}.`
+            : `You are a helpful social media assistant.`;
 
         const userPrompt = `
-            Recipe: ${recipe.name}
-            Description: ${recipe.description}
-            Ingredients: ${recipe.ingredients}
-            Instructions: ${recipe.instructions}
-            Origin Story: ${recipe.originStory || "No backstory provided"}
-            Target Platforms: ${platforms.join(', ')}
+            Product: "${product.name}"
+            Description: "${product.description}"
+            Key Features: ${features}
+            Usage/Details: ${usage}
+            Background/Why: ${product.background || "N/A"}
 
-            Write the script now.
+            Write a script/caption for these platforms: ${platforms.join(', ')}.
+            Include:
+            1. Hook
+            2. Main Content (Highlighting features)
+            3. Call to Action
+            
+            Format: Plain Text.
         `;
 
-        // 4. Call OpenAI
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [
@@ -67,17 +46,17 @@ export async function generateScript(recipeId: string, platforms: string[]) {
             ]
         });
 
-        const script = completion.choices[0].message.content;
-        return { success: true, script };
+        const script = completion.choices[0].message.content || "Failed to generate.";
+
         return { success: true, script };
 
     } catch (error) {
-        console.error("AI Generation Failed:", error);
-        return { success: false, error: "Failed to generate script" };
+        console.error("AI Generation failed:", error);
+        return { success: false, error: "AI Generation failed" };
     }
 }
 
-export async function saveContent(recipeId: string, type: string, url: string, platforms: string[], script: string) {
+export async function saveContent(productId: string, type: string, url: string, platforms: string[], script: string) {
     try {
         const createdContents = [];
 
@@ -85,12 +64,12 @@ export async function saveContent(recipeId: string, type: string, url: string, p
         for (const platform of platforms) {
             const content = await prisma.generatedContent.create({
                 data: {
-                    recipeId,
+                    productId,
                     type,
                     url,
-                    platform,
+                    platform: platform,
                     status: 'DRAFT',
-                    performanceMetrics: JSON.stringify({ script }) // Storing script in metrics for now
+                    performanceMetrics: JSON.stringify({ script })
                 }
             });
             createdContents.push(content);
@@ -210,45 +189,53 @@ export async function createProject(formData: FormData) {
     }
 }
 
-export async function createRecipe(formData: FormData) {
-    try {
-        const name = formData.get('name') as string;
-        const description = formData.get('description') as string;
-        const originStory = formData.get('originStory') as string;
-        const projectId = formData.get('projectId') as string;
-        const ingredientsRaw = formData.get('ingredients') as string;
-        const instructionsRaw = formData.get('instructions') as string;
+export async function createProduct(formData: FormData) {
+    const projectId = formData.get('projectId') as string;
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const features = formData.get('features') as string;
+    const usage = formData.get('usage') as string;
+    const background = formData.get('background') as string;
 
-        if (!name || !projectId) {
-            return { success: false, error: "Name and Project are required" };
+    // Validate inputs
+    let parsedFeatures = "[]";
+    let parsedUsage = "[]";
+
+    try {
+        // Try to parse if user pasted JSON, otherwise treat as newline separated list
+        if (features.trim().startsWith('[')) {
+            JSON.parse(features);
+            parsedFeatures = features;
+        } else {
+            parsedFeatures = JSON.stringify(features.split('\n').filter(line => line.trim() !== ''));
         }
 
-        // Parse ingredients and instructions from newline-separated text (safely)
-        const ingredients = JSON.stringify(
-            (ingredientsRaw || '').split('\n').map(s => s.trim()).filter(Boolean)
-        );
-        const instructions = JSON.stringify(
-            (instructionsRaw || '').split('\n').map(s => s.trim()).filter(Boolean)
-        );
+        if (usage.trim().startsWith('[')) {
+            JSON.parse(usage);
+            parsedUsage = usage;
+        } else {
+            parsedUsage = JSON.stringify(usage.split('\n').filter(line => line.trim() !== ''));
+        }
 
-        const recipe = await prisma.recipe.create({
+        const product = await prisma.product.create({
             data: {
+                projectId,
                 name,
                 description,
-                projectId,
-                ingredients,
-                instructions,
-                originStory,
-                images: '[]', // Default empty images
-                source: 'Manual Entry'
+                features: parsedFeatures,
+                usage: parsedUsage,
+                background: background || null,
+                images: "[]" // Placeholder
             }
         });
 
-        revalidatePath('/recipes');
-        return { success: true, recipeId: recipe.id };
+        revalidatePath(`/products/${product.id}`);
+        revalidatePath(`/projects/${projectId}`);
+        return { success: true, productId: product.id };
+
     } catch (error: any) {
-        console.error("Failed to create recipe:", error);
-        return { success: false, error: "Failed to create recipe: " + (error.message || "Unknown error") };
+        console.error("Failed to create product:", error);
+        return { success: false, error: error.message || "Failed to create product" };
     }
 }
 

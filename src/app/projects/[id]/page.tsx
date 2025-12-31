@@ -10,51 +10,54 @@ export default async function ProjectDetailPage({ params }: Props) {
     const { id } = await params;
     const project = await prisma.project.findUnique({
         where: { id },
-        include: { recipes: true } // FUTURE: Include Persona
+        include: {
+            products: true,
+            persona: true
+        }
     });
 
-    if (!project) {
-        notFound();
-    }
+    if (!project) notFound();
 
     return (
-        <div>
-            <header style={{ marginBottom: "var(--space-8)" }}>
-                <Link href="/projects" style={{ color: "var(--color-primary)", fontSize: "0.9rem", display: "inline-block", marginBottom: "var(--space-4)" }}>
-                    ← Back to Projects
-                </Link>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
-                    <div>
-                        <h1 style={{ fontSize: "2.5rem", marginBottom: "var(--space-2)" }}>{project.title}</h1>
-                        <p style={{ color: "var(--text-muted)", fontSize: "1.1rem", maxWidth: "600px" }}>{project.description}</p>
-                    </div>
-                    <Link href={`/recipes/new?projectId=${project.id}`} className="btn btn-primary">
-                        + Add Recipe
-                    </Link>
+        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+            <div style={{ marginBottom: "var(--space-8)", display: "flex", gap: "var(--space-6)", alignItems: "center" }}>
+                <div style={{ fontSize: "4rem" }}>{project.emoji}</div>
+                <div>
+                    <h1 style={{ fontSize: "2.5rem", marginBottom: "var(--space-2)" }}>{project.title}</h1>
+                    <p style={{ fontSize: "1.1rem", color: "var(--text-muted)" }}>{project.description}</p>
+                    {project.persona && (
+                        <div style={{ marginTop: "var(--space-2)", display: "inline-flex", alignItems: "center", gap: "var(--space-2)", background: "var(--bg-contrast)", padding: "4px 12px", borderRadius: "20px", fontSize: "0.9rem" }}>
+                            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }}></span>
+                            Assigned Persona: <strong>{project.persona.name}</strong>
+                        </div>
+                    )}
                 </div>
-            </header>
+            </div>
 
-            <section>
-                <h2 style={{ fontSize: "1.5rem", marginBottom: "var(--space-4)", borderBottom: "1px solid var(--border-color)", paddingBottom: "var(--space-2)" }}>Recipes</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-6)" }}>
+                <h2 style={{ fontSize: "1.5rem" }}>Products ({project.products.length})</h2>
+                <Link href={`/products/new?projectId=${project.id}`} className="btn btn-primary">
+                    + Add Product
+                </Link>
+            </div>
 
-                {project.recipes.length === 0 ? (
-                    <div style={{ textAlign: "center", padding: "var(--space-12)", background: "var(--bg-paper)", borderRadius: "var(--radius-lg)", border: "1px dashed var(--border-color)" }}>
-                        <p style={{ marginBottom: "var(--space-4)", color: "var(--text-muted)" }}>No recipes yet.</p>
-                        <Link href={`/recipes/new?projectId=${project.id}`} className="btn btn-primary">Create First Recipe</Link>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "var(--space-6)" }}>
+                {project.products.length === 0 ? (
+                    <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "var(--space-12)", background: "rgba(255,255,255,0.02)", borderRadius: "var(--radius-lg)", border: "1px dashed rgba(255,255,255,0.1)" }}>
+                        <p style={{ color: "var(--text-muted)", marginBottom: "var(--space-4)" }}>No products in this project yet.</p>
+                        <Link href={`/products/new?projectId=${project.id}`} className="btn">Add Your First Product</Link>
                     </div>
                 ) : (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "var(--space-6)" }}>
-                        {project.recipes.map((recipe) => (
-                            <Link href={`/recipes/${recipe.id}`} key={recipe.id} className="card" style={{ display: "block", transition: "transform 0.2s ease" }}>
-                                <h3 style={{ fontSize: "1.2rem", marginBottom: "var(--space-2)" }}>{recipe.name}</h3>
-                                <div style={{ display: "flex", gap: "var(--space-2)", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                                    <span>Added {new Date(recipe.createdAt).toLocaleDateString()}</span>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
+                    project.products.map(product => (
+                        <Link href={`/products/${product.id}`} key={product.id} className="card" style={{ textDecoration: "none" }}>
+                            <h3 style={{ fontSize: "1.25rem", margin: 0, fontWeight: 600 }}>{product.name}</h3>
+                            <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginTop: "var(--space-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {product.description}
+                            </p>
+                        </Link>
+                    ))
                 )}
-            </section>
+            </div>
         </div>
     );
 }

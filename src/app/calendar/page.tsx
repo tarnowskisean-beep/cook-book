@@ -4,55 +4,51 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export default async function CalendarPage() {
-    const scheduledPosts = await prisma.post.findMany({
-        where: { status: 'SCHEDULED' },
+    const posts = await prisma.post.findMany({
+        where: {
+            status: 'SCHEDULED',
+            scheduledTime: {
+                gte: new Date() // Future only
+            }
+        },
         include: {
             content: {
                 include: {
-                    recipe: { select: { name: true } }
+                    product: { select: { name: true } }
                 }
             }
         },
         orderBy: { scheduledTime: 'asc' }
     });
 
-    // Group by date
-    const groupedPosts: Record<string, typeof scheduledPosts> = scheduledPosts.reduce((acc: any, post) => {
-        const dateKey = post.scheduledTime ? new Date(post.scheduledTime).toDateString() : 'Unscheduled';
-        if (!acc[dateKey]) {
-            acc[dateKey] = [];
-        }
-        acc[dateKey].push(post);
-        return acc;
-    }, {});
+    // Group posts by Date
+    const groupedPosts: Record<string, any[]> = {};
+    posts.forEach(post => {
+        if (!post.scheduledTime) return;
+        const dateKey = new Date(post.scheduledTime).toLocaleDateString(undefined, {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+        if (!groupedPosts[dateKey]) groupedPosts[dateKey] = [];
+        groupedPosts[dateKey].push(post);
+    });
 
     return (
-        <>
+        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
             <header style={{ marginBottom: "var(--space-8)" }}>
                 <h1 style={{ fontSize: "2rem", marginBottom: "var(--space-2)" }}>Content Calendar</h1>
-                <p style={{ color: "var(--text-muted)" }}>View your upcoming scheduled posts.</p>
+                <p style={{ color: "var(--text-muted)" }}>View upcoming scheduled content.</p>
             </header>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-8)" }}>
-                {Object.keys(groupedPosts).length === 0 ? (
-                    <div className="card" style={{ textAlign: "center", padding: "var(--space-12)", color: "var(--text-muted)" }}>
-                        <p>No upcoming posts scheduled.</p>
-                        <Link href="/recipes" className="btn btn-primary" style={{ display: "inline-block", marginTop: "var(--space-4)" }}>
-                            Schedule Content
-                        </Link>
+            <div style={{ display: "grid", gap: "var(--space-8)" }}>
+                {Object.entries(groupedPosts).length === 0 ? (
+                    <div style={{ padding: "var(--space-12)", textAlign: "center", border: "1px dashed var(--border-color)", borderRadius: "var(--radius-lg)" }}>
+                        No upcoming posts.
                     </div>
                 ) : (
                     Object.entries(groupedPosts).map(([date, posts]) => (
                         <div key={date}>
-                            <h3 style={{
-                                fontSize: "1.2rem",
-                                marginBottom: "var(--space-4)",
-                                color: "var(--color-primary-light)",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "var(--space-2)"
-                            }}>
-                                📅 {date}
+                            <h3 style={{ fontSize: "1.2rem", marginBottom: "var(--space-4)", paddingBottom: "var(--space-2)", borderBottom: "1px solid var(--border-color2)", color: "var(--color-primary)" }}>
+                                {date}
                             </h3>
                             <div style={{ display: "grid", gap: "var(--space-4)" }}>
                                 {posts.map(post => (
@@ -64,7 +60,7 @@ export default async function CalendarPage() {
                                                     post.content.platform.includes('TikTok') ? '🎵' : '📺'}
                                             </div>
                                             <div>
-                                                <div style={{ fontWeight: 600 }}>{post.content.recipe.name}</div>
+                                                <div style={{ fontWeight: 600 }}>{post.content.product.name}</div>
                                                 <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
                                                     {post.content.platform} • {post.scheduledTime ? new Date(post.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Unscheduled'}
                                                 </div>
@@ -80,6 +76,6 @@ export default async function CalendarPage() {
                     ))
                 )}
             </div>
-        </>
+        </div>
     );
 }

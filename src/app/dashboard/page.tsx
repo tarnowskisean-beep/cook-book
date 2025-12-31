@@ -5,14 +5,14 @@ export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
     // Parallel data fetching for performance
-    const [projectCount, recipeCount, scheduledCount, recentProjects, upcomingPosts] = await Promise.all([
+    const [projectCount, productCount, scheduledCount, recentProjects, upcomingPosts] = await Promise.all([
         prisma.project.count(),
-        prisma.recipe.count(),
+        prisma.product.count(),
         prisma.post.count({ where: { status: 'SCHEDULED' } }),
         prisma.project.findMany({
             take: 4,
             orderBy: { createdAt: 'desc' },
-            include: { _count: { select: { recipes: true } } }
+            include: { _count: { select: { products: true } } }
         }),
         prisma.post.findMany({
             where: { status: 'SCHEDULED' },
@@ -20,7 +20,7 @@ export default async function DashboardPage() {
             orderBy: { scheduledTime: 'asc' },
             include: {
                 content: {
-                    include: { recipe: { include: { project: true } } }
+                    include: { product: { include: { project: true } } }
                 }
             }
         })
@@ -30,7 +30,7 @@ export default async function DashboardPage() {
         <div style={{ maxWidth: "1000px" }}>
             <header style={{ marginBottom: "var(--space-8)" }}>
                 <h1 style={{ fontSize: "2rem", marginBottom: "var(--space-2)" }}>Dashboard</h1>
-                <p style={{ color: "var(--text-muted)" }}>Welcome back, Chef.</p>
+                <p style={{ color: "var(--text-muted)" }}>Welcome back.</p>
             </header>
 
             {/* Metrics */}
@@ -40,8 +40,8 @@ export default async function DashboardPage() {
                 gap: "var(--space-6)",
                 marginBottom: "var(--space-8)"
             }}>
-                <MetricCard label="Active Projects" value={projectCount} icon="📚" />
-                <MetricCard label="Total Recipes" value={recipeCount} icon="🍳" />
+                <MetricCard label="Product Lines" value={projectCount} icon="📚" />
+                <MetricCard label="Total Products" value={productCount} icon="📦" />
                 <MetricCard label="Scheduled Posts" value={scheduledCount} icon="📅" color="#4ade80" />
             </div>
 
@@ -59,7 +59,7 @@ export default async function DashboardPage() {
                             <Link key={p.id} href={`/projects/${p.id}`} className="card" style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", transition: "transform 0.2s" }}>
                                 <div style={{ fontSize: "2rem" }}>{p.emoji}</div>
                                 <div style={{ fontWeight: 600 }}>{p.title}</div>
-                                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{p._count.recipes} Recipes</div>
+                                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{p._count.products} Products</div>
                             </Link>
                         ))}
                         <Link href="/projects/new" className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "var(--space-2)", borderStyle: "dashed", background: "transparent" }}>
@@ -70,8 +70,8 @@ export default async function DashboardPage() {
 
                     <h2 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "var(--space-4)" }}>Quick Actions</h2>
                     <div style={{ display: "flex", gap: "var(--space-4)" }}>
-                        <Link href="/recipes/new" className="btn btn-primary">
-                            + Add Recipe
+                        <Link href="/products/new" className="btn btn-primary">
+                            + Add Product
                         </Link>
                         <Link href="/personas/new" className="btn" style={{ background: "var(--bg-contrast)", border: "1px solid var(--border-color)" }}>
                             + New Persona
@@ -93,9 +93,9 @@ export default async function DashboardPage() {
                         ) : (
                             upcomingPosts.map(post => (
                                 <Link key={post.id} href={`/posts/${post.id}`} style={{ display: "flex", gap: "var(--space-3)", padding: "var(--space-4)", borderBottom: "1px solid var(--border-color2)", alignItems: "center", textDecoration: "none" }}>
-                                    <div style={{ fontSize: "1.5rem" }}>{post.content.recipe.project.emoji}</div>
+                                    <div style={{ fontSize: "1.5rem" }}>{post.content.product.project.emoji}</div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{post.content.recipe.name}</div>
+                                        <div style={{ fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{post.content.product.name}</div>
                                         <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
                                             {new Date(post.scheduledTime!).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                                         </div>

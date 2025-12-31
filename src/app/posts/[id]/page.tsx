@@ -15,7 +15,7 @@ export default async function PostDetailPage({ params }: Props) {
         include: {
             content: {
                 include: {
-                    recipe: {
+                    product: {
                         include: { project: true }
                     }
                 }
@@ -51,10 +51,10 @@ export default async function PostDetailPage({ params }: Props) {
 
             <div className="card" style={{ marginBottom: "var(--space-6)" }}>
                 <div style={{ display: "flex", gap: "var(--space-4)", marginBottom: "var(--space-4)", paddingBottom: "var(--space-4)", borderBottom: "1px solid var(--border-color)" }}>
-                    <div style={{ fontSize: "3rem" }}>{post.content.recipe.project.emoji}</div>
+                    <div style={{ fontSize: "3rem" }}>{post.content.product.project.emoji}</div>
                     <div>
-                        <h2 style={{ fontSize: "1.2rem", fontWeight: 600 }}>{post.content.recipe.name}</h2>
-                        <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Project: {post.content.recipe.project.title}</p>
+                        <h2 style={{ fontSize: "1.2rem", fontWeight: 600 }}>{post.content.product.name}</h2>
+                        <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Project: {post.content.product.project.title}</p>
                         <div style={{ display: "inline-block", marginTop: "var(--space-2)", padding: "2px 8px", borderRadius: "10px", background: "var(--bg-contrast)", fontSize: "0.8rem" }}>
                             {post.content.platform}
                         </div>
