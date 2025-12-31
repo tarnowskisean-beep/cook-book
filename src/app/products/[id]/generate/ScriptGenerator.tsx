@@ -17,7 +17,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
     const [saving, setSaving] = useState(false);
 
     // State
-    const [platforms, setPlatforms] = useState<string[]>(['Instagram Reels']);
+    const [platforms, setPlatforms] = useState<string[]>(['Instagram']);
     const [script, setScript] = useState('');
     const [caption, setCaption] = useState('');
     const [videoUrl, setVideoUrl] = useState('');
@@ -119,7 +119,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
                     <div>
                         <label style={{ display: "block", marginBottom: "var(--space-2)" }}>Target Platforms</label>
                         <div style={{ display: "flex", gap: "var(--space-4)" }}>
-                            {['Instagram Reels', 'TikTok', 'YouTube Shorts'].map(p => {
+                            {['Instagram', 'TikTok', 'Facebook', 'Twitter / X'].map(p => {
                                 const isSelected = platforms.includes(p);
                                 return (
                                     <button
