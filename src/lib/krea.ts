@@ -9,31 +9,33 @@ fal.config({
  * Generate an image using a fast, high-quality model (FLUX or SDXL).
  * We use FLUX Realism as it pairs well with Krea's aesthetic.
  */
-// Using the official Krea Flux model on Fal
-const result: any = await fal.subscribe("fal-ai/flux/krea", {
-    input: {
-        prompt,
-        image_size: aspectRatio === "16:9" ? "landscape_16_9" : aspectRatio === "9:16" ? "portrait_16_9" : "square_hd",
-        num_inference_steps: 28, // Krea recommended steps often around 25-30
-        guidance_scale: 3.5,
-        safety_tolerance: "2"
-    },
-    logs: true,
-    onQueueUpdate: (update) => {
-        if (update.status === "IN_PROGRESS") {
-            console.log("Fal Krea Generation: ", update.logs.map((log) => log.message));
-        }
-    },
-});
+export async function generateImage(prompt: string, aspectRatio: "16:9" | "9:16" | "1:1" = "16:9") {
+    try {
+        // Using the official Krea Flux model on Fal
+        const result: any = await fal.subscribe("fal-ai/flux/krea", {
+            input: {
+                prompt,
+                image_size: aspectRatio === "16:9" ? "landscape_16_9" : aspectRatio === "9:16" ? "portrait_16_9" : "square_hd",
+                num_inference_steps: 28, // Krea recommended steps often around 25-30
+                guidance_scale: 3.5,
+                safety_tolerance: "2"
+            },
+            logs: true,
+            onQueueUpdate: (update) => {
+                if (update.status === "IN_PROGRESS") {
+                    console.log("Fal Krea Generation: ", update.logs.map((log) => log.message));
+                }
+            },
+        });
 
-if (result.images && result.images.length > 0) {
-    return { success: true, url: result.images[0].url };
-}
-return { success: false, error: "No image returned" };
+        if (result.images && result.images.length > 0) {
+            return { success: true, url: result.images[0].url };
+        }
+        return { success: false, error: "No image returned" };
     } catch (error: any) {
-    console.error("Fal Image error:", error);
-    return { success: false, error: error.message };
-}
+        console.error("Fal Image error:", error);
+        return { success: false, error: error.message };
+    }
 }
 
 /**
