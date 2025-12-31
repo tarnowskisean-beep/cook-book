@@ -56,7 +56,7 @@ export default async function CalendarPage() {
                             </h3>
                             <div style={{ display: "grid", gap: "var(--space-4)" }}>
                                 {posts.map(post => (
-                                    <div key={post.id} className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderLeft: "4px solid #4ade80" }}>
+                                    <Link href={`/posts/${post.id}`} key={post.id} className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderLeft: "4px solid #4ade80", cursor: "pointer", transition: "transform 0.1s" }}>
                                         <div style={{ display: "flex", gap: "var(--space-4)", alignItems: "center" }}>
                                             {/* Platform Icon Stub */}
                                             <div style={{ width: "40px", height: "40px", background: "rgba(255,255,255,0.1)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -71,9 +71,9 @@ export default async function CalendarPage() {
                                             </div>
                                         </div>
                                         <div style={{ fontSize: "0.8rem", padding: "var(--space-1) var(--space-3)", background: "rgba(74, 222, 128, 0.1)", color: "#4ade80", borderRadius: "var(--radius-sm)" }}>
-                                            Scheduled
+                                            Manage
                                         </div>
-                                    </div>
+                                    </Link>
                                 ))}
                             </div>
                         </div>

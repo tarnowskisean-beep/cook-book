@@ -161,22 +161,44 @@ export async function toggleConnection(platform: string) {
 }
 
 export async function createProject(formData: FormData) {
-    try {
-        const title = formData.get('title') as string;
-        const description = formData.get('description') as string;
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
+    const personaId = formData.get('personaId') as string;
 
+    // Autopilot
+    const isAutopilot = formData.get('isAutopilot') === 'on';
+    const postsPerDay = Number(formData.get('postsPerDay')) || 1;
+    const autopilotConfig = isAutopilot ? JSON.stringify({ postsPerDay }) : null;
+
+    // Smart Emoji Generation (Mocked for speed)
+    const keywords: { [key: string]: string } = {
+        'grill': '🍖', 'bbq': '🔥', 'vegan': '🥗', 'dessert': '🍰',
+        'drink': '🍹', 'cocktail': '🍸', 'breakfast': '🥞', 'italian': '🍝',
+        'mexican': '🌮', 'asian': '🥢', 'bread': '🥖', 'family': '👨‍👩‍👧‍👦'
+    };
+
+    let emoji = "🍳";
+    const lowerTitle = title.toLowerCase();
+    for (const [key, icon] of Object.entries(keywords)) {
+        if (lowerTitle.includes(key)) {
+            emoji = icon;
+            break;
+        }
+    }
+
+    try {
         if (!title) {
             return { success: false, error: "Title is required" };
         }
-
-        const personaId = formData.get('personaId') as string;
 
         const project = await prisma.project.create({
             data: {
                 title,
                 description,
                 personaId: personaId || null,
-                // publicationDate is optional
+                emoji,
+                isAutopilot,
+                autopilotConfig
             }
         });
 

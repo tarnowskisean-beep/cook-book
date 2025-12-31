@@ -13,7 +13,10 @@ model Project {
   title           String
   description     String?
   publicationDate DateTime?
-  coverImage      String?
+
+  emoji           String   @default("🍳") // Replaces coverImage
+  isAutopilot     Boolean  @default(false)
+  autopilotConfig String?  // JSON: { postsPerDay: number }
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   

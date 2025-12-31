@@ -28,16 +28,14 @@ export default async function ProjectsPage() {
                 {projects.map((project) => (
                     <Link href={`/projects/${project.id}`} key={project.id} className="card" style={{ display: "block", transition: "transform 0.2s ease" }}>
                         <div style={{
-                            height: "200px",
+                            fontSize: "4rem",
                             marginBottom: "var(--space-4)",
-                            borderRadius: "var(--radius-md)",
-                            background: project.coverImage ? `url(${project.coverImage}) center/cover` : "rgba(255,255,255,0.05)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "var(--text-muted)"
+                            textAlign: "center",
+                            padding: "var(--space-4)",
+                            background: "var(--bg-contrast)",
+                            borderRadius: "var(--radius-md)"
                         }}>
-                            {!project.coverImage && "No Cover Image"}
+                            {project.emoji}
                         </div>
                         <h2 style={{ fontSize: "1.25rem", marginBottom: "var(--space-2)" }}>{project.title}</h2>
                         <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{project.description}</p>
