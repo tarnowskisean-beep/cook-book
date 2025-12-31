@@ -49,6 +49,7 @@ model Persona {
   name              String
   description       String? // Text description of personality
   visualDescription String? // Text description of appearance
+  avatarImage       String? // URL of the generated avatar
   voiceId           String? // ElevenLabs or other voice ID
   
   projects          Project[]

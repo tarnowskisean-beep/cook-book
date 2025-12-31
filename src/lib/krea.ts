@@ -44,15 +44,21 @@ export async function generateImage(prompt: string, aspectRatio: "16:9" | "9:16"
  * Submit a video generation job (Async).
  * Returns requestId to check status later.
  */
-export async function submitVideo(prompt: string) {
+export async function submitVideo(prompt: string, imageUrl?: string) {
     try {
-        const result = await fal.queue.submit("fal-ai/krea-wan-14b/text-to-video", {
-            input: {
-                prompt,
-                width: 720,
-                height: 1280
-            } as any
-        });
+        const endpoint = imageUrl ? "fal-ai/krea-wan-14b/image-to-video" : "fal-ai/krea-wan-14b/text-to-video";
+
+        const input: any = {
+            prompt,
+            width: 720,
+            height: 1280
+        };
+
+        if (imageUrl) {
+            input.image_url = imageUrl;
+        }
+
+        const result = await fal.queue.submit(endpoint, { input });
         return { success: true, requestId: result.request_id };
     } catch (error: any) {
         console.error("Fal Submit error:", error);
@@ -63,27 +69,21 @@ export async function submitVideo(prompt: string) {
 /**
  * Check the status of a video generation job.
  */
-export async function checkVideoStatus(requestId: string) {
+export async function checkVideoStatus(requestId: string, isImageToVideo: boolean = false) {
+    const endpoint = isImageToVideo ? "fal-ai/krea-wan-14b/image-to-video" : "fal-ai/krea-wan-14b/text-to-video";
     try {
-        // The new client likely expects 'request_id' or 'requestId', but return types are definitely snake_case often.
-        // Let's safe-guard by passing both if unsure, or sticking to documentation.
-        // However, based on the previous error, let's look at the usage.
-        const status = await fal.queue.status("fal-ai/krea-wan-14b/text-to-video", {
+        const status = await fal.queue.status(endpoint, {
             requestId,
             logs: true
         });
 
         if (status.status === "COMPLETED") {
-            // The result is in status.data (or we might need to fetch result separately depending on client version, 
-            // but @fal-ai/client usually includes payload in completed status or we call result).
-            // Actually, for queue, we might need fal.queue.result(requestId).
-            // Let's rely on fal.queue.result for the final payload.
-            const result: any = await fal.queue.result("fal-ai/krea-wan-14b/text-to-video", { requestId });
+            const result: any = await fal.queue.result(endpoint, { requestId });
             if (result.video && result.video.url) {
                 return { success: true, status: "COMPLETED", url: result.video.url };
             }
         }
-        return { success: true, status: status.status }; // IN_PROGRESS, QUEUED, etc.
+        return { success: true, status: status.status };
     } catch (error: any) {
         console.error("Fal Status error:", error);
         return { success: false, error: error.message };

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { managePersona } from "./actions";
+import { generateImageAction } from "@/app/actions";
 
 interface Props {
     persona?: {
@@ -10,6 +11,7 @@ interface Props {
         name: string;
         description: string | null;
         visualDescription: string | null;
+        avatarImage: string | null;
     }
 }
 
@@ -17,6 +19,30 @@ export default function PersonaForm({ persona }: Props) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
+    const [avatarUrl, setAvatarUrl] = useState<string>(persona?.avatarImage || "");
+    const [isGeneratingAvatar, setIsGeneratingAvatar] = useState(false);
+
+    const handleGenerateAvatar = async () => {
+        const visual = (document.getElementById('visualDescription') as HTMLTextAreaElement)?.value;
+        if (!visual) {
+            alert("Please enter a visual description first.");
+            return;
+        }
+
+        setIsGeneratingAvatar(true);
+        try {
+            const result = await generateImageAction(visual + " profile picture, character portrait, high quality, centered");
+            if (result.success && result.url) {
+                setAvatarUrl(result.url);
+            } else {
+                alert("Failed to generate avatar: " + result.error);
+            }
+        } catch (e: any) {
+            alert("Error: " + e.message);
+        } finally {
+            setIsGeneratingAvatar(false);
+        }
+    };
 
     const handleSubmit = async (formData: FormData) => {
         setError(null);
@@ -25,13 +51,13 @@ export default function PersonaForm({ persona }: Props) {
             if (result && !result.success) {
                 setError(result.error || "Failed to save persona");
             }
-            // On success, redirect happens in server action, or we can handle it here if it returned success
         });
     };
 
     return (
         <form action={handleSubmit} className="card">
             {persona && <input type="hidden" name="id" value={persona.id} />}
+            <input type="hidden" name="avatarImage" value={avatarUrl} />
 
             <div style={{ marginBottom: "var(--space-6)" }}>
                 <label htmlFor="name" style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: 500 }}>
@@ -100,6 +126,39 @@ export default function PersonaForm({ persona }: Props) {
                         fontFamily: "inherit"
                     }}
                 />
+            </div>
+
+            <div className="card" style={{ marginBottom: "var(--space-6)", background: "var(--bg-contrast)", border: "1px solid var(--border-color)" }}>
+                <label style={{ display: "block", marginBottom: "var(--space-4)", fontWeight: 500 }}>
+                    Avatar (Consistent Character)
+                </label>
+
+                <div style={{ display: "flex", gap: "var(--space-4)", alignItems: "center" }}>
+                    <div
+                        style={{
+                            width: "100px",
+                            height: "100px",
+                            background: avatarUrl ? `url(${avatarUrl}) center/cover` : "#333",
+                            borderRadius: "50%",
+                            border: "2px solid var(--border-color)",
+                            flexShrink: 0
+                        }}
+                    />
+                    <div>
+                        <button
+                            type="button"
+                            onClick={handleGenerateAvatar}
+                            disabled={isGeneratingAvatar}
+                            className="btn"
+                            style={{ background: "var(--bg-paper)", border: "1px solid var(--border-color)", marginBottom: "var(--space-2)" }}
+                        >
+                            {isGeneratingAvatar ? "Generating..." : "✨ Generate from Visual Style"}
+                        </button>
+                        <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                            This image will be used as the starting frame for videos to ensure character consistency.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {error && (

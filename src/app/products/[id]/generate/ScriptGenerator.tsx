@@ -60,7 +60,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
         setStatusMessage("Submitting job to Fal.ai (Krea Model)...");
         try {
             // 1. Submit Job
-            const submitResult = await submitVideoAction(script);
+            const submitResult = await submitVideoAction(script, productId);
             if (!submitResult.success || !submitResult.requestId) {
                 alert("Failed to start video generation: " + (submitResult.error || "Unknown error"));
                 setLoading(false);

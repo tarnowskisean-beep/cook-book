@@ -8,6 +8,7 @@ export async function managePersona(formData: FormData) {
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
     const visualDescription = formData.get('visualDescription') as string;
+    const avatarImage = formData.get('avatarImage') as string;
     const id = formData.get('id') as string;
 
     if (!name) return { success: false, error: "Name is required" };
@@ -17,12 +18,12 @@ export async function managePersona(formData: FormData) {
             // Update
             await prisma.persona.update({
                 where: { id },
-                data: { name, description, visualDescription }
+                data: { name, description, visualDescription, avatarImage }
             });
         } else {
             // Create
             await prisma.persona.create({
-                data: { name, description, visualDescription }
+                data: { name, description, visualDescription, avatarImage }
             });
         }
     } catch (error) {

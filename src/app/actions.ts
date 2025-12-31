@@ -344,8 +344,25 @@ export async function generateImageAction(prompt: string) {
     return await generateImage(prompt);
 }
 
-export async function submitVideoAction(prompt: string) {
-    return await submitVideo(prompt);
+export async function submitVideoAction(prompt: string, productId?: string) {
+    let avatarUrl: string | undefined;
+
+    if (productId) {
+        try {
+            const product = await prisma.product.findUnique({
+                where: { id: productId },
+                include: { project: { include: { persona: true } } }
+            });
+            if (product?.project?.persona?.avatarImage) {
+                avatarUrl = product.project.persona.avatarImage;
+                console.log("Using Avatar for Video:", avatarUrl);
+            }
+        } catch (e) {
+            console.error("Error fetching persona avatar:", e);
+        }
+    }
+
+    return await submitVideo(prompt, avatarUrl);
 }
 
 export async function checkVideoStatusAction(requestId: string) {
