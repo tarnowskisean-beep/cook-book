@@ -17,7 +17,8 @@ export default function Sidebar() {
     return (
         <aside style={{
             width: "280px",
-            background: "var(--color-surface)",
+            background: "rgba(0,0,0,0.2)", // More transparent
+            backdropFilter: "blur(20px)",
             borderRight: "1px solid rgba(255,255,255,0.05)",
             display: "flex",
             flexDirection: "column",
