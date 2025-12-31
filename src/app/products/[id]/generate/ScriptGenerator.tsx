@@ -11,22 +11,53 @@ interface Props {
 
 export default function ScriptGenerator({ productId, productName }: Props) {
     const router = useRouter();
+
+    // UI State
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [statusMessage, setStatusMessage] = useState<string>("");
 
-    // State
+    // Data State
     const [platforms, setPlatforms] = useState<string[]>(['Instagram']);
     const [script, setScript] = useState('');
     const [caption, setCaption] = useState('');
     const [videoUrl, setVideoUrl] = useState('');
 
-    // ... (existing code)
+    const togglePlatform = (p: string) => {
+        if (platforms.includes(p)) {
+            if (platforms.length > 1) { // Prevent unselecting last one
+                setPlatforms(platforms.filter(item => item !== p));
+            }
+        } else {
+            setPlatforms([...platforms, p]);
+        }
+    };
+
+    const handleGenerateScript = async () => {
+        setLoading(true);
+        setStatusMessage("Generating script with OpenAI...");
+        try {
+            const result = await generateScript(productId, platforms);
+
+            if (result.success && result.script) {
+                setScript(result.script);
+                setCaption(`Check out the new ${productName}! 🚀 #innovation #product`);
+                setStep(2);
+            } else {
+                alert("Generation failed: " + (result.error || "Unknown error"));
+            }
+        } catch (e: any) {
+            console.error(e);
+            alert("Error: " + e.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleGenerateVideo = async () => {
         setLoading(true);
-        setStatusMessage("Submitting job to Krea/Fal...");
+        setStatusMessage("Submitting job to Fal.ai (Krea Model)...");
         try {
             // 1. Submit Job
             const submitResult = await submitVideoAction(script);
@@ -78,11 +109,47 @@ export default function ScriptGenerator({ productId, productName }: Props) {
         }
     };
 
-    // ... (existing code)
+    const handleSaveAndSchedule = async () => {
+        setSaving(true);
+        try {
+            const result = await saveContent(
+                productId,
+                'VIDEO',
+                videoUrl,
+                platforms,
+                script
+            );
+
+            if (result.success && result.data) {
+                const contentIds = result.data.map((c: any) => c.id);
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+
+                await schedulePost(contentIds, tomorrow.toISOString());
+
+                alert(`Content saved and scheduled for ${platforms.length} platforms!`);
+                router.push(`/products/${productId}`);
+            } else {
+                alert("Failed to save content.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("An error occurred.");
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
         <div className="card" style={{ maxWidth: "800px", minHeight: "600px" }}>
-            {/* ... */}
+            {/* Progress Stepper */}
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--space-8)", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "var(--space-4)" }}>
+                {['Configuration', 'Script Review', 'Preview & Save'].map((label, i) => (
+                    <div key={label} style={{ color: step > i ? "#4ade80" : step === i + 1 ? "var(--color-primary-light)" : "var(--text-muted)", fontWeight: step === i + 1 ? 600 : 400 }}>
+                        {i + 1}. {label}
+                    </div>
+                ))}
+            </div>
 
             {loading && (
                 <div style={{ textAlign: "center", padding: "var(--space-12)" }}>
