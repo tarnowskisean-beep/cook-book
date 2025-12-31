@@ -37,8 +37,11 @@ export async function generateImage(prompt: string, aspectRatio: "16:9" | "9:16"
 
         console.log("Fal Krea Result:", JSON.stringify(result));
 
-        if (result.images && result.images.length > 0) {
-            return { success: true, url: result.images[0].url };
+        // Handle inconsistent API response structures (some wrap in 'data', some don't)
+        const images = result.images || (result.data && result.data.images);
+
+        if (images && images.length > 0) {
+            return { success: true, url: images[0].url };
         }
 
         return { success: false, error: "No image returned. Result: " + JSON.stringify(result) };
