@@ -13,7 +13,7 @@ interface Product {
     id: string;
     projectId: string;
     name: string;
-    description: string;
+    description: string | null;
     features: string | null;
     usage: string | null;
     background: string | null;
@@ -170,7 +170,7 @@ export default function ProductForm({ projects, product }: Props) {
                         id="description"
                         name="description"
                         rows={3}
-                        defaultValue={product?.description}
+                        defaultValue={product?.description || ""}
                         placeholder="Brief summary of the product..."
                         style={{
                             width: "100%",
