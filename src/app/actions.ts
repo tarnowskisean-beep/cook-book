@@ -181,10 +181,13 @@ export async function createProject(formData: FormData) {
             return { success: false, error: "Title is required" };
         }
 
+        const personaId = formData.get('personaId') as string;
+
         const project = await prisma.project.create({
             data: {
                 title,
                 description,
+                personaId: personaId || null,
                 // publicationDate is optional
             }
         });

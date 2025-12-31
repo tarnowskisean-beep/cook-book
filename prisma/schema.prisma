@@ -18,6 +18,9 @@ model Project {
   updatedAt       DateTime @updatedAt
   
   recipes         Recipe[]
+  
+  personaId       String?
+  persona         Persona? @relation(fields: [personaId], references: [id])
 }
 
 model Recipe {
@@ -44,6 +47,7 @@ model Persona {
   visualSettings    String? // JSON
   personalityTraits String? // JSON
   autopilotSettings String? // JSON
+  projects          Project[]
 }
 
 model GeneratedContent {
