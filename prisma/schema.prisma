@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id              String   @id @default(uuid())
+  title           String
+  description     String?
+  publicationDate DateTime?
+  coverImage      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  recipes         Recipe[]
+}
+
+model Recipe {
+  id           String   @id @default(uuid())
+  projectId    String
+  name         String
+  description  String?
+  ingredients  String   // JSON string
+  instructions String   // JSON string
+  images       String   // JSON string or comma-separated
+  source       String?
+  originStory  String?  // Backstory/Memory for AI context
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  project      Project  @relation(fields: [projectId], references: [id])
+  content      GeneratedContent[]
+}
+
+model Persona {
+  id                String @id @default(uuid())
+  name              String
+  voiceSettings     String // JSON
+  visualSettings    String? // JSON
+  personalityTraits String? // JSON
+  autopilotSettings String? // JSON
+}
+
+model GeneratedContent {
+  id                 String   @id @default(uuid())
+  recipeId           String
+  type               String   // VIDEO, IMAGE, CAPTION
+  url                String?
+  platform           String
+  status             String   // DRAFT, SCHEDULED, POSTED
+  performanceMetrics String?  // JSON
+  createdAt          DateTime @default(now())
+
+  recipe             Recipe   @relation(fields: [recipeId], references: [id])
+  posts              Post[]
+}
+
+model SocialAccount {
+  id          String   @id @default(uuid())
+  platform    String   // TWITTER, INSTAGRAM, FACEBOOK, TIKTOK
+  credentials String   // Encrypted
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Post {
+  id            String    @id @default(uuid())
+  contentId     String
+  scheduledTime DateTime?
+  publishedTime DateTime?
+  platformPostId String?
+  status        String    @default("DRAFT") // SCHEDULED, PUBLISHED, FAILED
+  metrics       String?   // JSON
+  
+  content       GeneratedContent @relation(fields: [contentId], references: [id])
+}
