@@ -23,8 +23,8 @@ export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VI
         const avatarNote = (type === 'VIDEO' && persona?.avatarImage) ? "Note: The video will start with the persona's avatar. Ensure the action flows naturally from a character introduction." : "";
 
         const systemPrompt = persona?.description
-            ? `You are this persona: ${persona.description}.`
-            : `You are a helpful social media assistant.`;
+            ? `You are this persona: ${persona.description}. Be creative, varied, and avoid repetition.`
+            : `You are a helpful social media assistant. Be creative, varied, and avoid repetition.`;
 
         let userPrompt = "";
 
@@ -77,6 +77,7 @@ export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VI
                 { role: "system", content: systemPrompt },
                 { role: "user", content: userPrompt }
             ],
+            temperature: 1.0,
             response_format: { type: "json_object" }
         });
 

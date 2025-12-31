@@ -282,6 +282,13 @@ export default function ScriptGenerator({ productId, productName }: Props) {
 
                     <div style={{ display: "flex", gap: "var(--space-4)" }}>
                         <button onClick={() => setStep(1)} className="btn" style={{ background: "rgba(255,255,255,0.1)" }}>Back</button>
+                        <button
+                            onClick={handleGeneratePrompt}
+                            className="btn"
+                            style={{ background: "transparent", border: "1px solid var(--color-primary)", color: "var(--color-primary)" }}
+                        >
+                            🔄 Regenerate
+                        </button>
                         <button onClick={handleGenerateContent} className="btn btn-primary" style={{ flex: 1 }}>
                             Generate {mediaType === 'VIDEO' ? 'Video' : 'Image'}
                         </button>
