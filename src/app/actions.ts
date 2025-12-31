@@ -34,18 +34,19 @@ export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VI
                 Description: "${product.description}"
                 Key Features: ${features}
                 ${visualStyle}
-
+                
                 Task:
-                1. Write a **Visual Prompt** for an AI Image Generator (Flux Realism). It should be detailed, photorealistic, and highlight the product features.
+                1. Write a **Visual Prompt** for an AI Image Generator (Flux Realism). It must be detailed, photorealistic, and highly descriptive.
                 2. Write a **Caption** for social media (${platforms.join(', ')}).
 
                 Output JSON format:
                 {
-                    "prompt": "The detailed visual prompt...",
+                    "prompt": "Highly detailed description of...",
                     "caption": "The social media caption..."
                 }
             `;
         } else {
+            // VIDEO: Kling specific structure
             userPrompt = `
                 Product: "${product.name}"
                 Description: "${product.description}"
@@ -54,12 +55,17 @@ export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VI
                 ${avatarNote}
 
                 Task:
-                1. Write a **Visual Prompt** for an AI Video Generator (Kling). Describe the camera movement, action, and scene. Keep it under 400 characters for best results.
-                2. Write a **Voiceover Script** (or caption if voiceover not needed) for social media (${platforms.join(', ')}).
+                1. Write a **Visual Prompt** for AI Video (Kling). It MUST follow this specific structure:
+                   "[Main Subject & Action] + [Camera Motion] + [Environment/Lighting] + [Style/Quality]"
+                   - Keep it under 50 words.
+                   - Be extremely specific about movement (e.g., "slow pan", "dynamic zoom", "steam rising").
+                   - If using an avatar, describe them performing a natural action relevant to the product.
+                
+                2. Write a **Voiceover Script** (or caption) for social media (${platforms.join(', ')}).
 
                 Output JSON format:
                 {
-                    "prompt": "The video generation prompt...",
+                    "prompt": "A close up of X doing Y, shot with 85mm lens, warm cinematic lighting, high quality...",
                     "caption": "The script/caption..."
                 }
             `;
