@@ -9,31 +9,43 @@ fal.config({
  * Generate an image using a fast, high-quality model (FLUX or SDXL).
  * We use FLUX Realism as it pairs well with Krea's aesthetic.
  */
+// Using the official Krea Flux model on Fal
 export async function generateImage(prompt: string, aspectRatio: "16:9" | "9:16" | "1:1" = "16:9") {
     try {
-        // Using the official Krea Flux model on Fal
+        // Map abstract aspect ratios to specific pixel dimensions for Krea
+        let imageSize = { width: 1344, height: 768 }; // 16:9 equivalent for ~1MP
+        if (aspectRatio === "9:16") imageSize = { width: 768, height: 1344 };
+        if (aspectRatio === "1:1") imageSize = { width: 1024, height: 1024 };
+
+        console.log("Submitting Krea Image Request:", { prompt, imageSize });
+
         const result: any = await fal.subscribe("fal-ai/flux/krea", {
             input: {
                 prompt,
-                image_size: aspectRatio === "16:9" ? "landscape_16_9" : aspectRatio === "9:16" ? "portrait_16_9" : "square_hd",
-                num_inference_steps: 28, // Krea recommended steps often around 25-30
-                guidance_scale: 3.5
+                image_size: imageSize, // Use explicit dimensions
+                num_inference_steps: 28,
+                guidance_scale: 3.5,
+                // safety_tolerance removed as it caused errors
             },
             logs: true,
             onQueueUpdate: (update) => {
                 if (update.status === "IN_PROGRESS") {
-                    console.log("Fal Krea Generation: ", update.logs.map((log) => log.message));
+                    console.log("Fal Krea Generation:", update.logs.map((log) => log.message));
                 }
             },
         });
 
+        console.log("Fal Krea Result:", JSON.stringify(result));
+
         if (result.images && result.images.length > 0) {
             return { success: true, url: result.images[0].url };
         }
-        return { success: false, error: "No image returned" };
+
+        return { success: false, error: "No image returned. Result: " + JSON.stringify(result) };
+
     } catch (error: any) {
         console.error("Fal Image error:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: error.message || String(error) };
     }
 }
 
