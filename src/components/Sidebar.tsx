@@ -17,9 +17,8 @@ export default function Sidebar() {
     return (
         <aside style={{
             width: "280px",
-            background: "rgba(0,0,0,0.2)", // More transparent
-            backdropFilter: "blur(20px)",
-            borderRight: "1px solid rgba(255,255,255,0.05)",
+            background: "var(--bg-paper)",
+            borderRight: "1px solid var(--border-color)",
             display: "flex",
             flexDirection: "column",
             padding: "var(--space-8) var(--space-4)",
@@ -30,11 +29,10 @@ export default function Sidebar() {
         }}>
             <div style={{ marginBottom: "var(--space-8)", padding: "0 var(--space-2)" }}>
                 <h2 style={{
-                    fontSize: "1.25rem",
+                    fontSize: "1.5rem",
                     fontWeight: 700,
-                    background: "linear-gradient(to right, var(--color-primary-light), var(--color-accent))",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent"
+                    color: "var(--color-primary)",
+                    fontFamily: "var(--font-heading)"
                 }}>
                     Everybook & Dom
                 </h2>
@@ -53,10 +51,11 @@ export default function Sidebar() {
                                 gap: "var(--space-4)",
                                 padding: "var(--space-4)",
                                 borderRadius: "var(--radius-md)",
-                                color: isActive ? "var(--color-primary-light)" : "var(--text-muted)",
-                                background: isActive ? "rgba(var(--primary-h), var(--primary-s), var(--primary-l), 0.1)" : "transparent",
+                                color: isActive ? "var(--color-primary)" : "var(--text-muted)",
+                                background: isActive ? "var(--bg-contrast)" : "transparent",
                                 transition: "all 0.2s ease",
-                                fontWeight: isActive ? 600 : 400
+                                fontWeight: isActive ? 700 : 400,
+                                fontFamily: "var(--font-body)"
                             }}
                             onMouseEnter={(e) => {
                                 if (!isActive) {
