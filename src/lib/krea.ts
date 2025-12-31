@@ -46,8 +46,10 @@ export async function generateVideo(prompt: string) {
         const result: any = await fal.subscribe("fal-ai/krea-wan-14b/text-to-video", {
             input: {
                 prompt,
-                aspect_ratio: "9:16" // Social media vertical default
-            },
+                // Using explicit dimensions for vertical video as aspect_ratio might not be typed
+                width: 720,
+                height: 1280
+            } as any,
             logs: true,
             onQueueUpdate: (update) => {
                 if (update.status === "IN_PROGRESS") {
