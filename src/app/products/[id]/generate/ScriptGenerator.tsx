@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from 'react';
-import { generateVideo } from '@/lib/ai/mock-service'; // Assumes this mock service exists
 import { useRouter } from 'next/navigation';
-import { saveContent, schedulePost, generateScript } from '@/app/actions';
+import { saveContent, schedulePost, generateScript, generateVideoAction } from '@/app/actions';
 
 interface Props {
     productId: string;
@@ -55,9 +54,16 @@ export default function ScriptGenerator({ productId, productName }: Props) {
     const handleGenerateVideo = async () => {
         setLoading(true);
         try {
-            const asset = await generateVideo(script);
-            setVideoUrl(asset.url);
-            setStep(3);
+            const result = await generateVideoAction(script);
+            if (result.success && result.url) {
+                setVideoUrl(result.url);
+                setStep(3);
+            } else {
+                alert("Failed to generate video: " + (result.error || "Unknown error"));
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error generating video");
         } finally {
             setLoading(false);
         }
@@ -173,7 +179,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
 
                     <div style={{ display: "flex", gap: "var(--space-4)" }}>
                         <button onClick={() => setStep(1)} className="btn" style={{ background: "rgba(255,255,255,0.1)" }}>Back</button>
-                        <button onClick={handleGenerateVideo} className="btn btn-primary" style={{ flex: 1 }}>Generate Video (Mock)</button>
+                        <button onClick={handleGenerateVideo} className="btn btn-primary" style={{ flex: 1 }}>Generate Video (Krea AI)</button>
                     </div>
                 </div>
             )}
