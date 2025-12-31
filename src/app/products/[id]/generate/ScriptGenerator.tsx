@@ -23,6 +23,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
     // Data State
     const [mediaType, setMediaType] = useState<MediaType>('VIDEO');
     const [platforms, setPlatforms] = useState<string[]>(['Instagram']);
+    const [style, setStyle] = useState<string>('Cinematic');
 
     // Content State
     const [visualPrompt, setVisualPrompt] = useState('');
@@ -43,7 +44,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
         setLoading(true);
         setStatusMessage("Designing visual concept & script...");
         try {
-            const result = await generateMediaPrompt(productId, mediaType, platforms);
+            const result = await generateMediaPrompt(productId, mediaType, platforms, style);
 
             if (result.success && result.prompt) {
                 setVisualPrompt(result.prompt);

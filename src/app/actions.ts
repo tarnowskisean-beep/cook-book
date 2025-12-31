@@ -8,7 +8,7 @@ import { generateImage, submitVideo, checkVideoStatus } from '@/lib/krea';
 
 // AI Generation Action
 // AI Generation Action
-export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VIDEO', platforms: string[]) {
+export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VIDEO', platforms: string[], style: string = "Cinematic") {
     try {
         const product = await prisma.product.findUnique({
             where: { id: productId },
@@ -19,7 +19,10 @@ export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VI
 
         const features = JSON.parse(product.features || "[]").join(", ");
         const persona = product.project.persona;
-        const visualStyle = persona?.visualDescription ? `Visual Style: ${persona.visualDescription}` : "";
+        const personaStyle = persona?.visualDescription ? `Persona Visual Preferences: ${persona.visualDescription}` : "";
+
+        // Combine User Selected Style with Persona Style
+        const visualStyle = `Requested Style: ${style}. ${personaStyle}`;
         // Avatar use disabled to prioritize Krea Video quality
         // const avatarNote = ...
 
@@ -38,6 +41,7 @@ export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VI
                 
                 Task:
                 1. Write a **Visual Prompt** for an AI Image Generator (Krea / FLUX.1). 
+                   - **Style Directive:** The user has requested "${style}" style. Ensure the lighting and composition match this vibe perfectly.
                    - It MUST be formatted for **high-end social media** (like Instagram/Pinterest).
                    - **Keywords to include:** "Award-winning photography", "cinematic lighting", "8k resolution", "sharp focus", "depth of field", "professional color grading", "soft natural light".
                    - **Avoid:** Generic descriptions, cartoons, low quality, oversaturated colors.
@@ -61,6 +65,7 @@ export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VI
 
                 Task:
                 1. Write a **Visual Prompt** for AI Video (Krea / Wan 14b).
+                   - **Style Directive:** The user has requested "${style}" style. Ensure the camera motion and lighting match this vibe perfectly.
                    - It MUST be formatted for **high-end social media** (cinematic, vertical).
                    - **Structure:** [Main Subject & Action] + [Camera Motion] + [Environment/Lighting] + [Style/Quality]
                    - Keep it under 50 words.
@@ -103,7 +108,7 @@ export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VI
 
 // Deprecated: Old generateScript
 export async function generateScript(productId: string, platforms: string[]) {
-    return generateMediaPrompt(productId, 'VIDEO', platforms);
+    return generateMediaPrompt(productId, 'VIDEO', platforms, "Cinematic");
 }
 
 export async function saveContent(productId: string, type: string, url: string, platforms: string[], script: string) {
