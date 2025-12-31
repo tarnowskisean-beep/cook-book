@@ -36,7 +36,12 @@ export async function generateMediaPrompt(productId: string, type: 'IMAGE' | 'VI
                 ${visualStyle}
                 
                 Task:
-                1. Write a **Visual Prompt** for an AI Image Generator (Krea / FLUX.1). It must be detailed, artsy, and highly descriptive.
+                1. Write a **Visual Prompt** for an AI Image Generator (Krea / FLUX.1). 
+                   - It MUST be formatted for **high-end social media** (like Instagram/Pinterest).
+                   - **Keywords to include:** "Award-winning photography", "cinematic lighting", "8k resolution", "sharp focus", "depth of field", "professional color grading", "soft natural light".
+                   - **Avoid:** Generic descriptions, cartoons, low quality, oversaturated colors.
+                   - **Structure:** [Subject] + [Action/Context] + [Environment/Lighting] + [Style/Camera Settings].
+                
                 2. Write a **Caption** for social media (${platforms.join(', ')}).
 
                 Output JSON format:
