@@ -38,23 +38,20 @@ export default function ProjectForm({ personas, project }: Props) {
     const handleSubmit = async (formData: FormData) => {
         setError(null);
         startTransition(async () => {
-            let result;
             if (isEdit && project) {
-                result = await updateProject(project.id, formData);
-            } else {
-                result = await createProject(formData);
-            }
-
-            if (result.success) {
-                if (!isEdit && result.projectId) {
-                    // On create success, go to new project
-                    router.push(`/projects/${result.projectId}`);
+                const result = await updateProject(project.id, formData);
+                if (result.success) {
+                    router.push(`/projects/${project.id}`);
                 } else {
-                    // On edit success, go back/refresh
-                    router.push(`/projects/${project!.id}`);
+                    setError(result.error || "Update failed");
                 }
             } else {
-                setError(result.error || "Operation failed");
+                const result = await createProject(formData);
+                if (result.success && result.projectId) {
+                    router.push(`/projects/${result.projectId}`);
+                } else {
+                    setError(result.error || "Creation failed");
+                }
             }
         });
     };
