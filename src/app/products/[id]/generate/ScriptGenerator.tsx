@@ -82,7 +82,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
 
         } else {
             // VIDEO
-            setStatusMessage("Submitting Video Job to Kling AI...");
+            setStatusMessage("Submitting Video Job to Krea AI...");
             try {
                 const submitResult = await submitVideoAction(visualPrompt, productId);
                 if (!submitResult.success || !submitResult.requestId) {
@@ -92,7 +92,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
                 }
 
                 const requestId = submitResult.requestId;
-                setStatusMessage("Job submitted. Waiting for Kling...");
+                setStatusMessage("Job submitted. Waiting for Krea...");
 
                 const pollInterval = setInterval(async () => {
                     try {
@@ -260,7 +260,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
 
                     <div>
                         <label style={{ display: "block", marginBottom: "var(--space-2)" }}>
-                            AI Visual Prompt ({mediaType === 'VIDEO' ? 'Kling Video' : 'Krea Image'})
+                            AI Visual Prompt ({mediaType === 'VIDEO' ? 'Krea Video' : 'Krea Image'})
                         </label>
                         <textarea
                             value={visualPrompt}
