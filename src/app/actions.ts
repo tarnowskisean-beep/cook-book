@@ -8,55 +8,43 @@ import openai from '@/lib/openai';
 // AI Generation Action
 export async function generateScript(recipeId: string, platforms: string[]) {
     try {
-        // 1. Fetch Context
-        const recipe = await prisma.recipe.findUnique({ where: { id: recipeId } });
-        const persona = await prisma.persona.findFirst();
+        // 1. Fetch Context with Project -> Persona relation
+        const recipe = await prisma.recipe.findUnique({
+            where: { id: recipeId },
+            include: {
+                project: {
+                    include: {
+                        persona: true
+                    }
+                }
+            }
+        });
 
         if (!recipe) throw new Error("Recipe not found");
 
-        // Default persona if not set or missing traits
-        const style = (persona && persona.personalityTraits && persona.voiceSettings) ? {
-            voice: JSON.parse(persona.voiceSettings).voice,
-            sass: JSON.parse(persona.personalityTraits).sassLevel,
-            energy: JSON.parse(persona.personalityTraits).energyLevel,
-            nostalgia: JSON.parse(persona.personalityTraits).nostalgiaLevel
-        } : { voice: "Generic", sass: 5, energy: 5, nostalgia: 5 };
+        // 2. Determine Persona (Project default -> Global default -> Fallback)
+        let persona = recipe.project?.persona;
 
-        // Dynamic Prompt Injection
-        let behavioralInstructions = "";
-
-        if (style.sass > 7) {
-            behavioralInstructions += "- CRITICAL: Actively roast the viewer. Mock the simplicity of the recipe. Be ruthless.\n";
-        } else if (style.sass < 4) {
-            behavioralInstructions += "- Be very polite and encouraging. Treat the viewer like a beginner.\n";
+        if (!persona) {
+            persona = await prisma.persona.findFirst();
         }
 
-        if (style.energy > 7) {
-            behavioralInstructions += "- CRITICAL: HYPE IT UP. Use short, punchy sentences. USE CAPS for emphasis. This is the most exciting thing ever.\n";
-        } else if (style.energy < 4) {
-            behavioralInstructions += "- Speak in a monotone, bored voice. You are tired of cooking. Sigh often.\n";
-        }
+        const personaName = persona?.name || "Dom";
+        const personality = persona?.description || "A helpful AI cooking assistant.";
+        const visuals = persona?.visualDescription || "A friendly digital avatar.";
 
-        if (style.nostalgia > 7) {
-            behavioralInstructions += `- STRATEGY: Focus on MEMORY and ORIGIN. Tell this specific story: "${recipe.originStory || 'Family Tradition'}". Lament modern shortcuts.\n`;
-        }
-
-        // 2. Construct Prompt
+        // 3. Construct Prompt with Text Descriptions
         const systemPrompt = `
-            You are ${persona?.name || "Dom"}, a digitized chef persona.
-            Voice: ${style.voice}
+            You are ${personaName}.
             
-            Your Core Personality Traits (1-10):
-            - Sass/Roasting: ${style.sass}
-            - Energy/Hype: ${style.energy}
-            - Nostalgia: ${style.nostalgia}
+            YOUR PERSONALITY:
+            ${personality}
+            
+            YOUR VISUAL STYLE:
+            ${visuals}
 
-            STRICT BEHAVIORAL INSTRUCTIONS:
-            ${behavioralInstructions}
-
-            Your goal is to write a viral optimization script for a cooking video.
-            The script should be under 45 seconds when read aloud.
-            Include [VISUAL] cues in brackets.
+            GOAL: Write a viral short-form video script (max 45s) for the provided recipe.
+            Include [VISUAL] cues in brackets adhering to your visual style.
         `;
 
         const userPrompt = `
@@ -67,11 +55,10 @@ export async function generateScript(recipeId: string, platforms: string[]) {
             Origin Story: ${recipe.originStory || "No backstory provided"}
             Target Platforms: ${platforms.join(', ')}
 
-            Task: Write a script that captures attention immediately.
-            Constraint: Identify one specific ingredient or step to focus your personality on.
+            Write the script now.
         `;
 
-        // 3. Call OpenAI
+        // 4. Call OpenAI
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [
@@ -81,6 +68,7 @@ export async function generateScript(recipeId: string, platforms: string[]) {
         });
 
         const script = completion.choices[0].message.content;
+        return { success: true, script };
         return { success: true, script };
 
     } catch (error) {
@@ -242,86 +230,5 @@ export async function createRecipe(formData: FormData) {
     }
 }
 
-export async function updateSettings(formData: FormData) {
-    try {
-        const name = formData.get('name') as string;
-        const voice = formData.get('voice') as string;
-
-        // Autopilot
-        const autopilot = {
-            enabled: formData.get('autopilotEnabled') === 'on',
-            postsPerDay: Number(formData.get('postsPerDay')),
-            requireApproval: formData.get('requireApproval') === 'on'
-        };
-
-        // Personality
-        const personality = {
-            sassLevel: Number(formData.get('sassLevel')),
-            energyLevel: Number(formData.get('energyLevel')),
-            nostalgiaLevel: Number(formData.get('nostalgiaLevel'))
-        };
-
-        const existing = await prisma.persona.findFirst();
-
-        if (existing) {
-            await prisma.persona.update({
-                where: { id: existing.id },
-                data: {
-                    name,
-                    voiceSettings: JSON.stringify({ voice }),
-                    autopilotSettings: JSON.stringify(autopilot),
-                    personalityTraits: JSON.stringify(personality)
-                }
-            });
-        } else {
-            await prisma.persona.create({
-                data: {
-                    name: name || 'Dom',
-                    voiceSettings: JSON.stringify({ voice }),
-                    autopilotSettings: JSON.stringify(autopilot),
-                    personalityTraits: JSON.stringify(personality)
-                }
-            });
-        }
-
-        revalidatePath('/settings');
-        return { success: true };
-    } catch (error) {
-        return { success: false, error: "Failed to update settings" };
-    }
-}
-
-export async function optimizePersona() {
-    try {
-        const persona = await prisma.persona.findFirst();
-        if (!persona) return { success: false, error: "No persona found" };
-
-        const currentTraits = persona.personalityTraits ? JSON.parse(persona.personalityTraits) : { sassLevel: 5, energyLevel: 5, nostalgiaLevel: 5 };
-
-        // SIMULATION: In a real app, we would fetch:
-        // const successfulPosts = await prisma.generatedContent.findMany({ where: { views: { gt: 10000 } } });
-        // And analyze their sentiment/style.
-
-        // For now, we simulate a "Learning Step"
-        // Let's assume the algorithm found that "Higher Energy" leads to better retention.
-        const newTraits = {
-            sassLevel: Math.min(10, Math.max(1, currentTraits.sassLevel + (Math.random() > 0.5 ? 1 : -1))), // Random nudge
-            energyLevel: Math.min(10, Math.max(1, currentTraits.energyLevel + 1)), // Bias towards higher energy
-            nostalgiaLevel: Math.min(10, Math.max(1, currentTraits.nostalgiaLevel + (Math.random() > 0.5 ? 1 : -1)))
-        };
-
-        await prisma.persona.update({
-            where: { id: persona.id },
-            data: {
-                personalityTraits: JSON.stringify(newTraits)
-            }
-        });
-
-        revalidatePath('/settings');
-        return { success: true, newTraits };
-
-    } catch (error) {
-        console.error("Optimization failed:", error);
-        return { success: false, error: "Optimization failed" };
-    }
-}
+// DEPRECATED: Old numeric setting actions removed in favor of text-based Personas.
+// See src/app/personas/actions.ts for new logic.

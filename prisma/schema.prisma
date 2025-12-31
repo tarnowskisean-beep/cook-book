@@ -43,10 +43,10 @@ model Recipe {
 model Persona {
   id                String @id @default(uuid())
   name              String
-  voiceSettings     String // JSON
-  visualSettings    String? // JSON
-  personalityTraits String? // JSON
-  autopilotSettings String? // JSON
+  description       String? // Text description of personality
+  visualDescription String? // Text description of appearance
+  voiceId           String? // ElevenLabs or other voice ID
+  
   projects          Project[]
 }
 

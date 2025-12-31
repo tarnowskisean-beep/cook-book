@@ -8,7 +8,7 @@ const NAV_ITEMS = [
     { label: "Projects", href: "/projects", icon: "📚" },
     { label: "Recipes", href: "/recipes", icon: "🍳" },
     { label: "Connections", href: "/connections", icon: "🔗" },
-    { label: "Settings", href: "/settings", icon: "⚙️" },
+    { label: "Personas", href: "/personas", icon: "🎭" },
 ];
 
 export default function Sidebar() {
@@ -60,7 +60,7 @@ export default function Sidebar() {
                             onMouseEnter={(e) => {
                                 if (!isActive) {
                                     e.currentTarget.style.color = "var(--text-main)";
-                                    e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                                    e.currentTarget.style.background = "var(--bg-contrast)"; // Warm hover
                                 }
                             }}
                             onMouseLeave={(e) => {
@@ -77,9 +77,9 @@ export default function Sidebar() {
                 })}
             </nav>
 
-            <div style={{ marginTop: "auto", padding: "var(--space-4)", background: "rgba(0,0,0,0.2)", borderRadius: "var(--radius-md)" }}>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Status: <span style={{ color: "#4ade80" }}>● Online</span></p>
+            <div style={{ marginTop: "auto", padding: "var(--space-4)", background: "rgba(0,0,0,0.05)", borderRadius: "var(--radius-md)" }}>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Status: <span style={{ color: "#16a34a" }}>● Online</span></p>
             </div>
-        </aside>
+        </aside >
     );
 }
