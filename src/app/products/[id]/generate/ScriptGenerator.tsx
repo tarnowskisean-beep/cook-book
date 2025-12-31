@@ -16,6 +16,12 @@ export default function ScriptGenerator({ productId, productName }: Props) {
     const [saving, setSaving] = useState(false);
     const [statusMessage, setStatusMessage] = useState<string>("");
 
+    // State
+    const [platforms, setPlatforms] = useState<string[]>(['Instagram']);
+    const [script, setScript] = useState('');
+    const [caption, setCaption] = useState('');
+    const [videoUrl, setVideoUrl] = useState('');
+
     // ... (existing code)
 
     const handleGenerateVideo = async () => {
