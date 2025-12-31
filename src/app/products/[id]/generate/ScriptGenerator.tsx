@@ -120,7 +120,7 @@ export default function ScriptGenerator({ productId, productName }: Props) {
 
             {!loading && step === 1 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>
-                    <h2 style={{ fontSize: "1.5rem" }}>Content Settings</h2>
+                    <h2 style={{ fontSize: "1.5rem" }}>Content Settings <span style={{ fontSize: "0.8rem", color: "#666" }}>(v2.0)</span></h2>
 
                     <div>
                         <label style={{ display: "block", marginBottom: "var(--space-2)" }}>Target Platforms</label>
