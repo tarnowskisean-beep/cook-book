@@ -191,9 +191,9 @@ export async function createProject(formData: FormData) {
 
         revalidatePath('/projects');
         return { success: true, projectId: project.id };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to create project:", error);
-        return { success: false, error: "Failed to create project" };
+        return { success: false, error: "Failed to create project: " + (error.message || "Unknown error") };
     }
 }
 

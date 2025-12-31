@@ -29,12 +29,12 @@ export default function Sidebar() {
         }}>
             <div style={{ marginBottom: "var(--space-8)", padding: "0 var(--space-2)" }}>
                 <h2 style={{
-                    fontSize: "1.5rem",
+                    fontSize: "1.2rem",
                     fontWeight: 700,
                     color: "var(--color-primary)",
                     fontFamily: "var(--font-heading)"
                 }}>
-                    Everybook & Dom
+                    AI Social Media Assistant
                 </h2>
             </div>
 

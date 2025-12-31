@@ -3,12 +3,12 @@ export default function Home() {
     <main style={{ padding: 'var(--space-8)' }}>
       <div className="container">
         <h1 style={{ fontSize: '3rem', marginBottom: 'var(--space-4)' }}>
-          Everybody & Their Mother's Cookbook
+          AI Social Media Assistant
         </h1>
         <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginBottom: 'var(--space-8)' }}>
           Manage your cookbook projects, generate social content, and track performance.
         </p>
-        
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-6)' }}>
           <div className="card">
             <h2>Projects</h2>

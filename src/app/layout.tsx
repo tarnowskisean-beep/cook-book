@@ -7,8 +7,8 @@ const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-headin
 const lato = Lato({ weight: ['400', '700'], subsets: ['latin'], variable: '--font-body' });
 
 export const metadata: Metadata = {
-  title: "Everybody & Their Mother's Cookbook",
-  description: 'Manage cookbook projects and social automation.',
+  title: "AI Social Media Assistant",
+  description: 'Manage projects and generate content with AI.',
 };
 
 export default function RootLayout({
