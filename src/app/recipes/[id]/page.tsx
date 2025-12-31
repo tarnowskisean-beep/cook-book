@@ -5,7 +5,11 @@ import { notFound } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 // Next.js 15+: params is a Promise
-export default async function RecipeDetailPage({ params }: { params: Promise<{ id: string }> }) {
+interface Props {
+    params: Promise<{ id: string }>;
+}
+
+export default async function RecipeDetailPage({ params }: Props) {
     const { id } = await params;
 
     const recipe = await prisma.recipe.findUnique({

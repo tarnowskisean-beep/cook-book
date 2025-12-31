@@ -5,7 +5,12 @@ import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-export default async function GeneratePage({ params }: { params: Promise<{ id: string }> }) {
+interface Props {
+    params: Promise<{ id: string }>,
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function GeneratorPage({ params }: Props) {
     const { id } = await params;
 
     const recipe = await prisma.recipe.findUnique({

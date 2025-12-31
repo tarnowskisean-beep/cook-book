@@ -3,12 +3,13 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 interface Props {
-    params: { id: string }
+    params: Promise<{ id: string }>
 }
 
 export default async function ProjectDetailPage({ params }: Props) {
+    const { id } = await params;
     const project = await prisma.project.findUnique({
-        where: { id: params.id },
+        where: { id },
         include: { recipes: true } // FUTURE: Include Persona
     });
 
